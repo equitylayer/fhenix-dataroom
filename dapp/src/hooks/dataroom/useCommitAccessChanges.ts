@@ -70,6 +70,12 @@ export function useCommitAccessChanges(dataRoomAddress: HexAddress | undefined) 
 						for (let i = 0; i < documentCount; i++) {
 							setProgress({ phase: CommitPhase.Rewrapping, current: i + 1, total: documentCount });
 							const doc = await contract.getDocument(folderId, BigInt(i));
+
+							if (!doc.wrappedKey || doc.wrappedKey === "0x") {
+								newWrappedKeys.push("0x");
+								continue;
+							}
+
 							const wrappedCek = hexToBytes(doc.wrappedKey);
 							const cek = await unwrapKey(wrappedCek, oldWrappingKey);
 							const newWrapped = await wrapKey(cek, newWrappingKey);
