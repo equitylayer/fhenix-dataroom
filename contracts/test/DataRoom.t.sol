@@ -76,8 +76,8 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_createRoom_createsParentRoom() public {
         DataRoom r = _freshRoom();
         vm.expectEmit(true, true, false, true);
-        emit DataRoom.RoomCreated(0, board);
-        vm.prank(board);
+        emit DataRoom.RoomCreated(0, nonBoard);
+        vm.prank(nonBoard);
         r.createRoom("Series A");
 
         (string memory name, uint256 docCount, uint256 memberCount, bool isParent,,) = r.getRoom(0);
@@ -85,12 +85,14 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         assertTrue(isParent);
         assertEq(memberCount, 0);
         assertEq(docCount, 0);
+        assertEq(r.ownerOf(0), nonBoard);
     }
 
-    function test_createRoom_rejectsNonAdmin() public {
-        vm.expectRevert(DataRoom.OnlyAdmin.selector);
+    function test_createRoom_allowsAnyCaller() public {
         vm.prank(nonBoard);
-        room.createRoom("Nope");
+        uint256 roomId = room.createRoom("Nope");
+        assertEq(roomId, 2);
+        assertEq(room.ownerOf(roomId), nonBoard);
     }
 
     // ═════════════════════════════════════════════════════════
@@ -119,7 +121,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         vm.stopPrank();
     }
 
-    function test_createFolder_rejectsNonAdmin() public {
+    function test_createFolder_rejectsNonOwner() public {
         vm.expectRevert(DataRoom.OnlyAdmin.selector);
         vm.prank(nonBoard);
         room.createFolder(PARENT, "Nope");
@@ -742,7 +744,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         assertEq(members.length, 1);
     }
 
-    function test_getMembers_revertsNonAdmin() public {
+    function test_getMembers_revertsNonOwner() public {
         vm.expectRevert(DataRoom.Unauthorized.selector);
         vm.prank(member);
         room.getMembers(FOLDER);
@@ -991,11 +993,19 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         room.createFolder(999, "Orphan");
     }
 
-    function test_getRoomKey_adminCanAccessAfterTransfer() public {
+    function test_getRoomKey_ownerCanAccessAfterAdminTransfer() public {
+        address newAdmin = makeAddr("newAdmin");
+        vm.prank(board);
+        room.setAdmin(newAdmin);
+
         bytes32 h1 = _keyHandle(board, FOLDER);
         assertTrue(h1 != bytes32(0));
 
         vm.prank(board);
+        room.getRoomKey(FOLDER);
+
+        vm.expectRevert(DataRoom.Unauthorized.selector);
+        vm.prank(newAdmin);
         room.getRoomKey(FOLDER);
     }
 

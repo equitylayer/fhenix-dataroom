@@ -389,7 +389,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
     //  9. Member mutation blocking
     // ═══════════════════════════════════════════════════════════════
 
-    function test_memberCannotMutateAnything() public {
+    function test_memberCannotMutateForeignRoom() public {
         vm.startPrank(board);
         uint256 parentId = room.createRoom("ReadOnly");
         uint256 folderId = room.createFolder(parentId, "Data");
@@ -404,8 +404,8 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
 
         vm.startPrank(investorA);
 
-        vm.expectRevert(DataRoom.OnlyAdmin.selector);
-        room.createRoom("Nope");
+        uint256 ownParentId = room.createRoom("Nope");
+        assertEq(room.ownerOf(ownParentId), investorA);
 
         vm.expectRevert(DataRoom.OnlyAdmin.selector);
         room.createFolder(parentId, "Nope");
