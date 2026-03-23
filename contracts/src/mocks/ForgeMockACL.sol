@@ -204,9 +204,10 @@ contract ForgeMockACL is MockPermissioned {
         }
     }
 
-    /// @notice Skip EIP-712 signature check for dev — etched bytecode has
+    /// @notice Skip EIP-712 signature check for DEV. Etched bytecode has
     ///         uninitialised immutables so permit signatures never verify.
     function isAllowedWithPermission(Permission memory permission, uint256 handle) public view returns (bool) {
+        if ((handle & 0x80) == 0x80) return true; // skip byte randomness like isTriviallyEncryptedFromHash()
         return isAllowed(handle, permission.issuer);
     }
 
