@@ -1,0 +1,17 @@
+/**
+ * Modal Styles
+ */
+
+/* Modal actions - sticky at bottom of scrollable content */
+.modal-actions {
+  display: flex;
+  position: sticky;
+  bottom: -1.5rem;
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  margin-bottom: -1.5rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-top: 1px solid var(--border);
+  z-index: 10;
+}

@@ -1,0 +1,3 @@
+export type HexAddress = `0x${string}`;
+
+export const CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || "31337");

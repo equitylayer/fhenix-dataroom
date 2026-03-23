@@ -1,0 +1,20 @@
+/**
+ * Alert Styles
+ */
+
+.alert-warning {
+  padding: 0.75rem;
+  background-color: #fef3c7;
+  border: 1px solid #fbbf24;
+  color: #92400e;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.alert-warning__icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}

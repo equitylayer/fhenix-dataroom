@@ -1,0 +1,20 @@
+/**
+ * Form Styles
+ */
+
+/* Helper text below form fields */
+.form-hint {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-top: 0.25rem;
+}
+
+/* Field labels */
+.field-label {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  margin: 0 0 0.25rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}

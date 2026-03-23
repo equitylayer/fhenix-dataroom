@@ -1,0 +1,852 @@
+{
+  "abi": [
+    {
+      "type": "function",
+      "name": "MAX_BATCH_SIZE",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "NO_PARENT",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "addDocuments",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "cids",
+          "type": "string[]",
+          "internalType": "string[]"
+        },
+        {
+          "name": "names",
+          "type": "string[]",
+          "internalType": "string[]"
+        },
+        {
+          "name": "wrappedKeys",
+          "type": "bytes[]",
+          "internalType": "bytes[]"
+        },
+        {
+          "name": "metadata",
+          "type": "bytes[]",
+          "internalType": "bytes[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "admin",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "createFolder",
+      "inputs": [
+        {
+          "name": "parentId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "internalType": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "createRoom",
+      "inputs": [
+        {
+          "name": "name",
+          "type": "string",
+          "internalType": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "documentKeyVersion",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getDocument",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "docIndex",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "cid",
+          "type": "string",
+          "internalType": "string"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "internalType": "string"
+        },
+        {
+          "name": "createdAt",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "keyVersion",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "wrappedKey",
+          "type": "bytes",
+          "internalType": "bytes"
+        },
+        {
+          "name": "metadata",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getFolders",
+      "inputs": [
+        {
+          "name": "parentId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256[]",
+          "internalType": "uint256[]"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getMembers",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address[]",
+          "internalType": "address[]"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getParentRoom",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getRoom",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "name",
+          "type": "string",
+          "internalType": "string"
+        },
+        {
+          "name": "documentCount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "memberCount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "isParent",
+          "type": "bool",
+          "internalType": "bool"
+        },
+        {
+          "name": "parentId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "childCount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getRoomKey",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "euint128"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "grantAccess",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "users",
+          "type": "address[]",
+          "internalType": "address[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "grantAccessToAllFolders",
+      "inputs": [
+        {
+          "name": "parentId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "hasAccess",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "initialize",
+      "inputs": [
+        {
+          "name": "_admin",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_operator",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "operator",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "rekeyRoom",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "removeDocument",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "docIndex",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "renameRoom",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "newName",
+          "type": "string",
+          "internalType": "string"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "revokeAccess",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "users",
+          "type": "address[]",
+          "internalType": "address[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "revokeAccessFromAllFolders",
+      "inputs": [
+        {
+          "name": "parentId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "user",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "revokeAndRekey",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "users",
+          "type": "address[]",
+          "internalType": "address[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "roomCount",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "roomKeyVersion",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "rooms",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "name",
+          "type": "string",
+          "internalType": "string"
+        },
+        {
+          "name": "documentCount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "memberCount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "isParent",
+          "type": "bool",
+          "internalType": "bool"
+        },
+        {
+          "name": "parentId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "childCount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "setAdmin",
+      "inputs": [
+        {
+          "name": "newAdmin",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "updateDocumentKeys",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "docIndices",
+          "type": "uint256[]",
+          "internalType": "uint256[]"
+        },
+        {
+          "name": "newWrappedKeys",
+          "type": "bytes[]",
+          "internalType": "bytes[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "updateDocumentMetadata",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "docIndices",
+          "type": "uint256[]",
+          "internalType": "uint256[]"
+        },
+        {
+          "name": "metadata",
+          "type": "bytes[]",
+          "internalType": "bytes[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "AdminChanged",
+      "inputs": [
+        {
+          "name": "oldAdmin",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "newAdmin",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "DocumentAdded",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "docIndex",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "DocumentRemoved",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "docIndex",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "FolderCreated",
+      "inputs": [
+        {
+          "name": "parentId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "MembershipChanged",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RoomCreated",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "creator",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RoomRekeyed",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "newVersion",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RoomRenamed",
+      "inputs": [
+        {
+          "name": "roomId",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "newName",
+          "type": "string",
+          "indexed": false,
+          "internalType": "string"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "AlreadyInitialized",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "BatchTooLarge",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "CannotRevokeOperator",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "DocumentDeleted",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "DocumentNotFound",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "EmptyBatch",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidAddress",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "IsParentRoom",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "LengthMismatch",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotMember",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotParentRoom",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "OnlyAdmin",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "RoomNotFound",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "Unauthorized",
+      "inputs": []
+    }
+  ]
+}

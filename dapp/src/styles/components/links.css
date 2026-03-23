@@ -1,0 +1,18 @@
+/**
+ * Link Styles
+ */
+
+.external-link {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.external-link:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}

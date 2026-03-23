@@ -1,0 +1,23 @@
+/**
+ * Card & Section Styles
+ */
+
+/* Section headings */
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.section-description {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  margin: 0 0 1rem 0;
+}

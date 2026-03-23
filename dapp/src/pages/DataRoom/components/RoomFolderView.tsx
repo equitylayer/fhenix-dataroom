@@ -1,0 +1,191 @@
+import { useState } from "react";
+import { Plus, Users, UserPlus, UserMinus, Loader2, AlertTriangle } from "lucide-react";
+import {
+	useRoom,
+	useAccessibleFolders,
+	useCreateFolder,
+	useGrantAccessToAllFolders,
+	useRevokeAccessFromAllFolders,
+} from "@/hooks/dataroom";
+import type { HexAddress } from "@/lib/contracts";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FolderCard } from "../FolderCard";
+
+interface IRoomFolderViewProps {
+	dataRoomAddress: HexAddress;
+	roomId: bigint;
+	isAdmin: boolean;
+	onSelectFolder: (folderId: bigint) => void;
+}
+
+export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolder }: IRoomFolderViewProps) {
+	const { data: roomData } = useRoom(dataRoomAddress, roomId);
+	const { data: folderIds } = useAccessibleFolders(dataRoomAddress, roomId, isAdmin);
+	const {
+		createFolder,
+		isPending: isCreatingFolder,
+		isConfirming: isConfirmingFolder,
+		error: createFolderError,
+	} = useCreateFolder(dataRoomAddress);
+	const {
+		grantAccessToAllFolders,
+		isPending: isGrantingAll,
+		isConfirming: isConfirmingGrantAll,
+	} = useGrantAccessToAllFolders(dataRoomAddress);
+	const {
+		revokeAccessFromAllFolders,
+		isPending: isRevokingAll,
+		isConfirming: isConfirmingRevokeAll,
+	} = useRevokeAccessFromAllFolders(dataRoomAddress);
+
+	const [showCreateFolder, setShowCreateFolder] = useState(false);
+	const [folderName, setFolderName] = useState("");
+	const [bulkMember, setBulkMember] = useState("");
+
+	if (!roomData) {
+		return (
+			<div className="flex items-center gap-2 text-muted-foreground">
+				<Loader2 className="h-4 w-4 animate-spin" />
+				Loading data room...
+			</div>
+		);
+	}
+
+	const folders = (folderIds as bigint[] | undefined) ?? [];
+	const isFolderBusy = isCreatingFolder || isConfirmingFolder;
+
+	const handleCreateFolder = () => {
+		if (!folderName.trim()) return;
+		createFolder(roomId, folderName.trim());
+		setFolderName("");
+		setShowCreateFolder(false);
+	};
+
+	const handleGrantAll = () => {
+		if (!bulkMember.trim()) return;
+		grantAccessToAllFolders(roomId, bulkMember.trim());
+		setBulkMember("");
+	};
+
+	const handleRevokeAll = () => {
+		if (!bulkMember.trim()) return;
+		revokeAccessFromAllFolders(roomId, bulkMember.trim());
+		setBulkMember("");
+	};
+
+	return (
+		<div id="folders" className="scroll-mt-24">
+			<div className="flex gap-6 items-start">
+				<div className="flex-1 min-w-0">
+					<div className="flex items-center justify-between mb-4">
+						<h3 className="font-semibold text-sm">Folders</h3>
+						{isAdmin && (
+							<Button variant="textLink" onClick={() => setShowCreateFolder(true)} size="sm">
+								<Plus className="h-4 w-4" />
+								New Folder
+							</Button>
+						)}
+					</div>
+
+					{isAdmin && showCreateFolder && (
+						<div className="border border-border rounded-lg p-4 mb-4">
+							<h3 className="font-semibold text-sm mb-3">New Folder</h3>
+							<div className="flex gap-3 items-center">
+								<Input
+									type="text"
+									value={folderName}
+									onChange={(e) => setFolderName(e.target.value)}
+									placeholder="Folder name (e.g. Legal, Financials)"
+									className="flex-1"
+									onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
+								/>
+								<Button onClick={handleCreateFolder} disabled={isFolderBusy}>
+									{isCreatingFolder && "Signing..."}
+									{!isCreatingFolder && isConfirmingFolder && "Confirming..."}
+									{!isCreatingFolder && !isConfirmingFolder && "Create"}
+								</Button>
+								<Button variant="ghost" size="sm" onClick={() => setShowCreateFolder(false)}>
+									Cancel
+								</Button>
+							</div>
+						</div>
+					)}
+
+					{createFolderError && (
+						<div className="mb-4 rounded-lg px-3 py-2 text-xs bg-destructive/10 text-destructive">
+							<AlertTriangle className="h-3 w-3 inline mr-1" />
+							{createFolderError.message}
+						</div>
+					)}
+
+					{isFolderBusy && (
+						<div className="border border-border rounded-lg p-4 mb-4 flex items-center gap-3 text-sm text-muted-foreground">
+							<Loader2 className="h-4 w-4 animate-spin" />
+							{isCreatingFolder ? "Waiting for signature..." : "Confirming transaction..."}
+						</div>
+					)}
+
+					{folders.length === 0 && !isFolderBusy ? (
+						<div className="border border-dashed border-border rounded-lg py-16 text-center text-muted-foreground text-sm">
+							No folders yet.{isAdmin ? " Create one to start adding documents." : ""}
+						</div>
+					) : (
+						<div className="grid gap-3 sm:grid-cols-2">
+							{folders.map((fId) => (
+								<FolderCard
+									key={fId.toString()}
+									dataRoomAddress={dataRoomAddress}
+									folderId={fId}
+									isOwner={isAdmin}
+									onSelect={() => onSelectFolder(fId)}
+								/>
+							))}
+						</div>
+					)}
+				</div>
+
+				{isAdmin && folders.length > 0 && (
+					<div className="hidden lg:block w-64 shrink-0">
+						<div className="border border-border rounded-lg p-4">
+							<h3 className="text-sm font-semibold flex items-center gap-1.5 mb-1">
+								<Users className="h-4 w-4" />
+								Share access
+							</h3>
+							<p className="text-xs text-muted-foreground mb-3">Grant or revoke across all folders.</p>
+							<Input
+								type="text"
+								value={bulkMember}
+								onChange={(e) => setBulkMember(e.target.value)}
+								placeholder="0x..."
+								className="w-full text-xs font-mono mb-2"
+							/>
+							<div className="flex gap-2">
+								<Button
+									variant="textLink"
+									size="icon"
+									onClick={handleGrantAll}
+									disabled={isGrantingAll || isConfirmingGrantAll || !bulkMember.trim()}
+									title="Grant access to all folders"
+									className="flex-1"
+								>
+									<UserPlus className="h-3.5 w-3.5" />
+								</Button>
+								<Button
+									variant="dangerLink"
+									size="icon"
+									onClick={handleRevokeAll}
+									disabled={isRevokingAll || isConfirmingRevokeAll || !bulkMember.trim()}
+									title="Revoke access from all folders"
+									className="flex-1"
+								>
+									<UserMinus className="h-3.5 w-3.5" />
+								</Button>
+							</div>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	);
+}

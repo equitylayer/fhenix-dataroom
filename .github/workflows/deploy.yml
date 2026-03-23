@@ -1,0 +1,38 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: dapp/yarn.lock
+
+      - name: Install dapp dependencies
+        working-directory: dapp
+        run: yarn install --frozen-lockfile
+
+      - name: Build dapp
+        working-directory: dapp
+        env:
+          VITE_RPC_URL: ${{ vars.VITE_RPC_URL }}
+          VITE_CHAIN_ID: ${{ vars.VITE_CHAIN_ID }}
+          VITE_STORACHA_KEY: ${{ secrets.VITE_STORACHA_KEY }}
+          VITE_STORACHA_PROOF: ${{ secrets.VITE_STORACHA_PROOF }}
+        run: yarn build
+
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          entryPoint: dapp

@@ -1,0 +1,7 @@
+/**
+ * Text & Display Utilities
+ */
+
+.text-muted {
+  color: var(--muted-foreground);
+}
