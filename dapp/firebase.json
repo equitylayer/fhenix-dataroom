@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "fhenix-dr",
+    "site": "obolos-dr",
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [

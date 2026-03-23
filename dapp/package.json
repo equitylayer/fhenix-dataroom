@@ -8,6 +8,8 @@
 		"dev:stack": "bash scripts/deploy-local.sh && vite",
 		"build": "tsc -b && vite build",
 		"preview": "vite preview",
+		"pull-abis": "node scripts/pull-abis.js ../contracts && yarn gen",
+		"pull-abis:staging": "node scripts/pull-abis.js ../contracts --chain-id 84532 && yarn gen",
 		"gen": "typechain --target=ethers-v6 --out-dir src/types ./src/assets/abis/*.json"
 	},
 	"dependencies": {

@@ -4,7 +4,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DAPP_ROOT="$(dirname "$SCRIPT_DIR")"
 CONTRACTS_ROOT="$DAPP_ROOT/../contracts"
-ABI_DIR="$DAPP_ROOT/src/assets/abis"
 
 # Anvil default accounts (#0 deploys & is admin, #9 = operator)
 export PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
@@ -18,27 +17,15 @@ cd "$CONTRACTS_ROOT"
 forge build
 
 echo "▸ Deploying to local Anvil ($RPC_URL)…"
-OUTPUT=$(forge script script/Deploy.s.sol:Deploy \
+forge script script/Deploy.s.sol:Deploy \
   --rpc-url "$RPC_URL" \
-  --broadcast 2>&1)
+  --broadcast
 
-echo "$OUTPUT"
+echo "▸ Pulling ABIs and contract addresses…"
+cd "$DAPP_ROOT"
+node scripts/pull-abis.js ../contracts --chain-id 31337
 
-# Extract deployed address from forge output
-DEPLOYED_ADDRESS=$(echo "$OUTPUT" | grep -oE "DataRoom deployed at: 0x[0-9a-fA-F]+" | grep -oE "0x[0-9a-fA-F]+")
+echo "▸ Generating TypeChain types…"
+yarn gen
 
-echo "▸ Copying ABIs to dapp…"
-mkdir -p "$ABI_DIR"
-python3 -c "
-import json, sys
-with open('$CONTRACTS_ROOT/out/DataRoom.sol/DataRoom.json') as f:
-    data = json.load(f)
-with open('$ABI_DIR/DataRoom.json', 'w') as f:
-    json.dump(data['abi'], f, indent=2)
-"
-
-echo "▸ ABI written to src/assets/abis/DataRoom.json"
-
-if [ -n "${DEPLOYED_ADDRESS:-}" ]; then
-  echo "▸ DataRoom deployed at: $DEPLOYED_ADDRESS"
-fi
+echo "✓ Done — contracts deployed and dapp types updated"

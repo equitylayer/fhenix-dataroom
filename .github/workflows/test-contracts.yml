@@ -1,0 +1,30 @@
+name: Test Contracts
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Install dependencies
+        working-directory: contracts
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        working-directory: contracts
+        run: forge build
+
+      - name: Run tests
+        working-directory: contracts
+        run: forge test -vvv
