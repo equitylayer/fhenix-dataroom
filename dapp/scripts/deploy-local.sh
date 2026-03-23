@@ -5,19 +5,26 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DAPP_ROOT="$(dirname "$SCRIPT_DIR")"
 CONTRACTS_ROOT="$DAPP_ROOT/../contracts"
 
-# Anvil default accounts (#0 deploys & is admin, #9 = operator)
-export PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-export ADMIN_ADDRESS="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-export OPERATOR_ADDRESS="0xa0Ee7A142d267C1f36714E4a8F75612F20a79720"
-
-RPC_URL="http://127.0.0.1:8545"
+set -a
+source "$CONTRACTS_ROOT/.env.local"
+set +a
 
 echo "▸ Building contracts…"
 cd "$CONTRACTS_ROOT"
 forge build
 
-echo "▸ Deploying to local Anvil ($RPC_URL)…"
-forge script script/Deploy.s.sol:Deploy \
+echo "▸ Etching CoFHE mocks at hardcoded addresses…"
+TM_CODE=$(forge inspect MockTaskManager deployedBytecode)
+ACL_CODE=$(forge inspect ForgeMockACL deployedBytecode)
+ZK_CODE=$(forge inspect MockZkVerifier deployedBytecode)
+TN_CODE=$(forge inspect MockThresholdNetwork deployedBytecode)
+cast rpc anvil_setCode 0xeA30c4B8b44078Bbf8a6ef5b9f1eC1626C7848D9 "$TM_CODE" --rpc-url "$RPC_URL" > /dev/null
+cast rpc anvil_setCode 0xa6Ea4b5291d044D93b73b3CFf3109A1128663E8B "$ACL_CODE" --rpc-url "$RPC_URL" > /dev/null
+cast rpc anvil_setCode 0x0000000000000000000000000000000000005001 "$ZK_CODE" --rpc-url "$RPC_URL" > /dev/null
+cast rpc anvil_setCode 0x0000000000000000000000000000000000005002 "$TN_CODE" --rpc-url "$RPC_URL" > /dev/null
+
+echo "▸ Deploying DataRoom (+ initialising CoFHE mocks)…"
+forge script script/DeployLocal.s.sol:DeployLocal \
   --rpc-url "$RPC_URL" \
   --broadcast
 

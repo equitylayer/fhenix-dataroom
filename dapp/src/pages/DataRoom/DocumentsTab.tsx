@@ -102,7 +102,7 @@ export function DocumentsTab({
 				</div>
 
 				{showCreateRoom && (
-					<div className="border border-border rounded-lg p-4 mb-4">
+					<div className="border border-border rounded-lg bg-card p-4 mb-4 shadow-sm">
 						<h3 className="font-semibold text-sm mb-3">New Data Room</h3>
 						<div className="flex gap-3 items-center">
 							<Input
@@ -126,7 +126,7 @@ export function DocumentsTab({
 				)}
 
 				{(isCreatingRoom || isConfirmingRoom) && (
-					<div className="border border-border rounded-lg p-4 mb-4 flex items-center gap-3 text-sm text-muted-foreground">
+					<div className="border border-border rounded-lg bg-card p-4 mb-4 flex items-center gap-3 text-sm text-muted-foreground shadow-sm">
 						<Loader2 className="h-4 w-4 animate-spin" />
 						{isCreatingRoom ? "Waiting for signature..." : "Confirming transaction..."}
 					</div>
@@ -140,7 +140,7 @@ export function DocumentsTab({
 				)}
 
 				{count === 0 && !isCreatingRoom && !isConfirmingRoom ? (
-					<div className="border border-dashed border-border rounded-lg py-16 text-center text-muted-foreground text-sm">
+					<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
 						No data rooms yet.{isAdmin ? " Create one to get started." : ""}
 					</div>
 				) : (

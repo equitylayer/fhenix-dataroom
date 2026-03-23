@@ -86,7 +86,7 @@ export function DocumentList({ dataRoomAddress, folderId, documentCount, isAdmin
 	};
 
 	return (
-		<div className="lg:col-span-2 border border-border rounded-lg p-5">
+		<div className="lg:col-span-2 border border-border rounded-lg bg-card p-5 shadow-sm">
 			<div className="flex items-center justify-between mb-4">
 				<h2 className="font-semibold text-sm flex items-center gap-2">
 					<FileText className="h-4 w-4 text-muted-foreground" />

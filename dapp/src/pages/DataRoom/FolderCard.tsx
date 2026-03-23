@@ -20,7 +20,7 @@ export function FolderCard({ dataRoomAddress, folderId, isOwner, onSelect }: IFo
 		<button
 			type="button"
 			onClick={onSelect}
-			className="group w-full text-left border border-border rounded-lg p-4 hover:border-foreground/20 transition-all duration-200 cursor-pointer"
+			className="group w-full text-left border border-border rounded-lg bg-card p-4 shadow-sm hover:border-foreground/20 transition-all duration-200 cursor-pointer"
 		>
 			<div className="flex items-center gap-3">
 				<div className="shrink-0 w-8 h-8 rounded-md bg-primary/8 flex items-center justify-center">

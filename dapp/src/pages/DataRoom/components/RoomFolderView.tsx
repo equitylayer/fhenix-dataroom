@@ -89,7 +89,7 @@ export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolde
 					</div>
 
 					{isAdmin && showCreateFolder && (
-						<div className="border border-border rounded-lg p-4 mb-4">
+						<div className="border border-border rounded-lg bg-card p-4 mb-4 shadow-sm">
 							<h3 className="font-semibold text-sm mb-3">New Folder</h3>
 							<div className="flex gap-3 items-center">
 								<Input
@@ -120,14 +120,14 @@ export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolde
 					)}
 
 					{isFolderBusy && (
-						<div className="border border-border rounded-lg p-4 mb-4 flex items-center gap-3 text-sm text-muted-foreground">
+						<div className="border border-border rounded-lg bg-card p-4 mb-4 flex items-center gap-3 text-sm text-muted-foreground shadow-sm">
 							<Loader2 className="h-4 w-4 animate-spin" />
 							{isCreatingFolder ? "Waiting for signature..." : "Confirming transaction..."}
 						</div>
 					)}
 
 					{folders.length === 0 && !isFolderBusy ? (
-						<div className="border border-dashed border-border rounded-lg py-16 text-center text-muted-foreground text-sm">
+						<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
 							No folders yet.{isAdmin ? " Create one to start adding documents." : ""}
 						</div>
 					) : (
@@ -147,7 +147,7 @@ export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolde
 
 				{isAdmin && folders.length > 0 && (
 					<div className="hidden lg:block w-64 shrink-0">
-						<div className="border border-border rounded-lg p-4">
+						<div className="border border-border rounded-lg bg-card p-4 shadow-sm">
 							<h3 className="text-sm font-semibold flex items-center gap-1.5 mb-1">
 								<Users className="h-4 w-4" />
 								Share access

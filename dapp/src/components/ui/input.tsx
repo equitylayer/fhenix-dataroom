@@ -17,7 +17,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type,
 				fontSize: "0.9rem",
 				border: "1px solid var(--border)",
 				borderRadius: "0.5rem",
-				backgroundColor: "transparent",
+				backgroundColor: "var(--card)",
 				color: "var(--foreground)",
 				...((props.style || {}) as React.CSSProperties),
 			}}

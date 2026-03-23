@@ -17,7 +17,7 @@ export function RoomCard({ dataRoomAddress, roomId, onSelect }: IRoomCardProps) 
 		<button
 			type="button"
 			onClick={onSelect}
-			className="group w-full text-left border border-border rounded-lg p-5 hover:border-foreground/20 transition-all duration-200 cursor-pointer"
+			className="group w-full text-left border border-border rounded-lg bg-card p-5 shadow-sm hover:border-foreground/20 transition-all duration-200 cursor-pointer"
 		>
 			<div className="flex items-center gap-3">
 				<div className="shrink-0 w-9 h-9 rounded-md bg-primary/8 flex items-center justify-center">

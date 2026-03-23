@@ -85,7 +85,7 @@ export function AccessGroup({
 
 	return (
 		<>
-			<div className="border border-border rounded-lg p-5">
+			<div className="border border-border rounded-lg bg-card p-5 shadow-sm">
 				<h2 className="font-semibold text-sm flex items-center gap-2 mb-4">
 					<Users className="h-4 w-4 text-muted-foreground" />
 					Access Group

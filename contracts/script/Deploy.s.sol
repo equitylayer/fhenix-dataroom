@@ -5,7 +5,6 @@ import "forge-std/Script.sol";
 import {DataRoom} from "../src/DataRoom.sol";
 
 /// @title Deploy
-/// @notice Deploys the DataRoom contract for local dev or testnet.
 contract Deploy is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
