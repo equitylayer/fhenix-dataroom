@@ -1,17 +1,10 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount } from "wagmi";
 import { DocumentsTab } from "@/pages/DataRoom/DocumentsTab";
 import { DATAROOM_ADDRESS } from "@/lib/contracts";
-import DataRoomABI from "@/assets/abis/DataRoom.json";
 
 function App() {
 	const { isConnected } = useAccount();
-
-	const { data: admin } = useReadContract({
-		address: DATAROOM_ADDRESS,
-		abi: DataRoomABI,
-		functionName: "admin",
-	}) as { data: string | undefined };
 
 	return (
 		<div className="min-h-screen bg-background">
@@ -29,10 +22,8 @@ function App() {
 						</p>
 						<ConnectButton />
 					</div>
-				) : !admin ? (
-					<div className="text-center py-16 text-muted-foreground text-sm">Loading contract data...</div>
 				) : (
-					<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} adminAddress={admin} />
+					<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />
 				)}
 			</main>
 		</div>

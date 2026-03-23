@@ -1,6 +1,7 @@
 export { ZERO_BYTES32 } from "./shared";
 export { useRoomCount } from "./useRoomCount";
 export { useRoom } from "./useRoom";
+export { useVisibleParentRooms } from "./useVisibleParentRooms";
 export { useAccessibleFolders } from "./useAccessibleFolders";
 export { useDocument } from "./useDocument";
 export { useRoomMembers } from "./useRoomMembers";

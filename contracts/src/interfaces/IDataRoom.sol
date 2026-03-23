@@ -71,6 +71,8 @@ interface IDataRoom {
 
     function getParentRoom(uint256 roomId) external view returns (uint256);
 
+    function ownerOf(uint256 roomId) external view returns (address);
+
     function roomCount() external view returns (uint256);
 
     function admin() external view returns (address);

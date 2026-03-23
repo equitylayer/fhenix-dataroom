@@ -402,6 +402,25 @@ const _abi = [
   },
   {
     type: "function",
+    name: "ownerOf",
+    inputs: [
+      {
+        name: "roomId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "rekeyRoom",
     inputs: [
       {
@@ -546,6 +565,11 @@ const _abi = [
       },
     ],
     outputs: [
+      {
+        name: "owner",
+        type: "address",
+        internalType: "address",
+      },
       {
         name: "name",
         type: "string",

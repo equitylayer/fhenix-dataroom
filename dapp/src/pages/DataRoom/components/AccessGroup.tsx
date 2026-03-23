@@ -14,16 +14,16 @@ export function AccessGroup({
 	folderId,
 	members,
 	documentCount,
-	isAdmin,
-	boardAddress,
+	isOwner,
+	ownerAddress,
 	roomKeyHex,
 }: {
 	dataRoomAddress: HexAddress;
 	folderId: bigint;
 	members: string[];
 	documentCount: number;
-	isAdmin: boolean;
-	boardAddress: string;
+	isOwner: boolean;
+	ownerAddress: string;
 	roomKeyHex: string | null;
 }) {
 	const { commit, progress: commitProgress, reset: resetCommit } = useCommitAccessChanges(dataRoomAddress);
@@ -81,7 +81,7 @@ export function AccessGroup({
 		await rekeyAndRewrap(folderId, documentCount, roomKeyHex);
 	};
 
-	const isBoard = (member: string) => boardAddress && member.toLowerCase() === boardAddress.toLowerCase();
+	const isRoomOwner = (member: string) => ownerAddress && member.toLowerCase() === ownerAddress.toLowerCase();
 
 	return (
 		<>
@@ -89,10 +89,10 @@ export function AccessGroup({
 				<h2 className="font-semibold text-sm flex items-center gap-2 mb-4">
 					<Users className="h-4 w-4 text-muted-foreground" />
 					Access Group
-					{isAdmin && <span className="text-muted-foreground font-normal">({members.length})</span>}
+					{isOwner && <span className="text-muted-foreground font-normal">({members.length})</span>}
 				</h2>
 
-				{isAdmin && (
+				{isOwner && (
 					<>
 						<div className="mb-4">
 							<div className="flex flex-wrap gap-1.5 mb-2">
@@ -142,9 +142,9 @@ export function AccessGroup({
 											}`}
 										>
 											<CopyableAddress value={member} />
-											{isBoard(member) && (
+											{isRoomOwner(member) && (
 												<span className="text-primary text-[0.65rem] uppercase tracking-wider">
-													admin
+													owner
 												</span>
 											)}
 											{markedForRemoval && (
@@ -153,7 +153,7 @@ export function AccessGroup({
 												</span>
 											)}
 										</span>
-										{!isBoard(member) && (
+										{!isRoomOwner(member) && (
 											<>
 												{markedForRemoval ? (
 													<Button
@@ -264,8 +264,8 @@ export function AccessGroup({
 					</>
 				)}
 
-				{!isAdmin && (
-					<p className="text-sm text-muted-foreground">Member list is only visible to the operator.</p>
+				{!isOwner && (
+					<p className="text-sm text-muted-foreground">Member list is only visible to the room owner.</p>
 				)}
 			</div>
 

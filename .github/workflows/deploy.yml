@@ -28,10 +28,16 @@ jobs:
           VITE_STORACHA_PROOF: ${{ secrets.VITE_STORACHA_PROOF }}
         run: yarn build
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Deploy to Firebase Hosting
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' && secrets.FIREBASE_PROJECT_ID != '' }}
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
           projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
           entryPoint: dapp
+
+      - name: Skip Firebase deploy
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT == '' || secrets.FIREBASE_PROJECT_ID == '' }}
+        run: echo "Skipping Firebase Hosting deploy because FIREBASE_SERVICE_ACCOUNT or FIREBASE_PROJECT_ID is not configured."

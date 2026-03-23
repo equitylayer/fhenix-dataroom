@@ -44,6 +44,7 @@ export interface DataRoomInterface extends Interface {
       | "hasAccess"
       | "initialize"
       | "operator"
+      | "ownerOf"
       | "rekeyRoom"
       | "removeDocument"
       | "renameRoom"
@@ -131,6 +132,10 @@ export interface DataRoomInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "operator", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "ownerOf",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "rekeyRoom",
     values: [BigNumberish]
   ): string;
@@ -215,6 +220,7 @@ export interface DataRoomInterface extends Interface {
   decodeFunctionResult(functionFragment: "hasAccess", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "operator", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "rekeyRoom", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "removeDocument",
@@ -488,6 +494,8 @@ export interface DataRoom extends BaseContract {
 
   operator: TypedContractMethod<[], [string], "view">;
 
+  ownerOf: TypedContractMethod<[roomId: BigNumberish], [string], "view">;
+
   rekeyRoom: TypedContractMethod<[roomId: BigNumberish], [void], "nonpayable">;
 
   removeDocument: TypedContractMethod<
@@ -527,7 +535,8 @@ export interface DataRoom extends BaseContract {
   rooms: TypedContractMethod<
     [arg0: BigNumberish],
     [
-      [string, bigint, bigint, boolean, bigint, bigint] & {
+      [string, string, bigint, bigint, boolean, bigint, bigint] & {
+        owner: string;
         name: string;
         documentCount: bigint;
         memberCount: bigint;
@@ -672,6 +681,9 @@ export interface DataRoom extends BaseContract {
     nameOrSignature: "operator"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "ownerOf"
+  ): TypedContractMethod<[roomId: BigNumberish], [string], "view">;
+  getFunction(
     nameOrSignature: "rekeyRoom"
   ): TypedContractMethod<[roomId: BigNumberish], [void], "nonpayable">;
   getFunction(
@@ -720,7 +732,8 @@ export interface DataRoom extends BaseContract {
   ): TypedContractMethod<
     [arg0: BigNumberish],
     [
-      [string, bigint, bigint, boolean, bigint, bigint] & {
+      [string, string, bigint, bigint, boolean, bigint, bigint] & {
+        owner: string;
         name: string;
         documentCount: bigint;
         memberCount: bigint;

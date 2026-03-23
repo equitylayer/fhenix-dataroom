@@ -23,6 +23,7 @@ contract DataRoom {
     error CannotRevokeOperator();
 
     struct Room {
+        address owner;
         string name;
         uint256 documentCount;
         uint256 memberCount;
@@ -81,6 +82,11 @@ contract DataRoom {
         _;
     }
 
+    modifier onlyRoomOwner(uint256 roomId) {
+        if (rooms[roomId].owner != msg.sender) revert OnlyAdmin();
+        _;
+    }
+
     modifier notParentRoom(uint256 roomId) {
         if (rooms[roomId].isParent) revert IsParentRoom();
         _;
@@ -119,11 +125,18 @@ contract DataRoom {
     /// @notice Create a new parent room
     /// @param name Human-readable room name.
     /// @return roomId The ID of the newly created room.
-    function createRoom(string calldata name) external onlyAdmin returns (uint256 roomId) {
+    function createRoom(string calldata name) external returns (uint256 roomId) {
         roomId = roomCount++;
 
-        rooms[roomId] =
-            Room({name: name, documentCount: 0, memberCount: 0, isParent: true, parentId: NO_PARENT, childCount: 0});
+        rooms[roomId] = Room({
+            owner: msg.sender,
+            name: name,
+            documentCount: 0,
+            memberCount: 0,
+            isParent: true,
+            parentId: NO_PARENT,
+            childCount: 0
+        });
 
         emit RoomCreated(roomId, msg.sender);
     }
@@ -134,8 +147,8 @@ contract DataRoom {
     /// @return roomId The ID of the newly created folder.
     function createFolder(uint256 parentId, string calldata name)
         external
-        onlyAdmin
         roomExists(parentId)
+        onlyRoomOwner(parentId)
         returns (uint256 roomId)
     {
         Room storage parent = rooms[parentId];
@@ -143,8 +156,15 @@ contract DataRoom {
 
         roomId = roomCount++;
 
-        rooms[roomId] =
-            Room({name: name, documentCount: 0, memberCount: 0, isParent: false, parentId: parentId, childCount: 0});
+        rooms[roomId] = Room({
+            owner: msg.sender,
+            name: name,
+            documentCount: 0,
+            memberCount: 0,
+            isParent: false,
+            parentId: parentId,
+            childCount: 0
+        });
 
         _children[parentId][parent.childCount] = roomId;
         parent.childCount++;
@@ -163,7 +183,7 @@ contract DataRoom {
     /// @notice Rename an existing room or folder.
     /// @param roomId  The room or folder to rename.
     /// @param newName The new name.
-    function renameRoom(uint256 roomId, string calldata newName) external onlyAdmin roomExists(roomId) {
+    function renameRoom(uint256 roomId, string calldata newName) external roomExists(roomId) onlyRoomOwner(roomId) {
         rooms[roomId].name = newName;
         emit RoomRenamed(roomId, newName);
     }
@@ -182,23 +202,14 @@ contract DataRoom {
         string[] calldata names,
         bytes[] calldata wrappedKeys,
         bytes[] calldata metadata
-    ) external onlyAdmin roomExists(roomId) notParentRoom(roomId) {
+    ) external roomExists(roomId) onlyRoomOwner(roomId) notParentRoom(roomId) {
         if (cids.length == 0) revert EmptyBatch();
         if (cids.length != names.length || cids.length != wrappedKeys.length || cids.length != metadata.length) {
             revert LengthMismatch();
         }
         if (cids.length > MAX_BATCH_SIZE) revert BatchTooLarge();
         for (uint256 i = 0; i < cids.length;) {
-            uint256 docIndex = rooms[roomId].documentCount++;
-            _documents[roomId][docIndex] = Document({
-                cid: cids[i],
-                name: names[i],
-                createdAt: block.timestamp,
-                wrappedKey: wrappedKeys[i],
-                metadata: metadata[i],
-                deleted: false
-            });
-            documentKeyVersion[roomId][docIndex] = roomKeyVersion[roomId];
+            uint256 docIndex = _storeDocument(roomId, cids[i], names[i], wrappedKeys[i], metadata[i]);
             emit DocumentAdded(roomId, docIndex);
             unchecked {
                 ++i;
@@ -211,8 +222,8 @@ contract DataRoom {
     /// @param docIndex Index of the document to remove.
     function removeDocument(uint256 roomId, uint256 docIndex)
         external
-        onlyAdmin
         roomExists(roomId)
+        onlyRoomOwner(roomId)
         notParentRoom(roomId)
     {
         if (docIndex >= rooms[roomId].documentCount) revert DocumentNotFound();
@@ -227,8 +238,8 @@ contract DataRoom {
     /// @param metadata    New metadata bytes per document.
     function updateDocumentMetadata(uint256 roomId, uint256[] calldata docIndices, bytes[] calldata metadata)
         external
-        onlyAdmin
         roomExists(roomId)
+        onlyRoomOwner(roomId)
         notParentRoom(roomId)
     {
         if (docIndices.length != metadata.length) revert LengthMismatch();
@@ -250,8 +261,8 @@ contract DataRoom {
     /// @param newWrappedKeys  New wrapped CEKs (re-wrapped with the new room key).
     function updateDocumentKeys(uint256 roomId, uint256[] calldata docIndices, bytes[] calldata newWrappedKeys)
         external
-        onlyAdmin
         roomExists(roomId)
+        onlyRoomOwner(roomId)
         notParentRoom(roomId)
     {
         if (docIndices.length != newWrappedKeys.length) revert LengthMismatch();
@@ -275,8 +286,8 @@ contract DataRoom {
     /// @param users    Addresses to grant access.
     function grantAccess(uint256 roomId, address[] calldata users)
         external
-        onlyAdmin
         roomExists(roomId)
+        onlyRoomOwner(roomId)
         notParentRoom(roomId)
     {
         if (users.length > MAX_BATCH_SIZE) revert BatchTooLarge();
@@ -296,8 +307,8 @@ contract DataRoom {
     /// @param users    Addresses to revoke.
     function revokeAccess(uint256 roomId, address[] calldata users)
         external
-        onlyAdmin
         roomExists(roomId)
+        onlyRoomOwner(roomId)
         notParentRoom(roomId)
     {
         _revokeAccess(roomId, users);
@@ -308,8 +319,8 @@ contract DataRoom {
     /// @param users    Addresses to revoke.
     function revokeAndRekey(uint256 roomId, address[] calldata users)
         external
-        onlyAdmin
         roomExists(roomId)
+        onlyRoomOwner(roomId)
         notParentRoom(roomId)
     {
         _revokeAccess(roomId, users);
@@ -319,7 +330,7 @@ contract DataRoom {
     /// @notice Grant a user access to all folders under a parent room.
     /// @param parentId The parent room ID.
     /// @param user Address of the user to grant access.
-    function grantAccessToAllFolders(uint256 parentId, address user) external onlyAdmin roomExists(parentId) {
+    function grantAccessToAllFolders(uint256 parentId, address user) external roomExists(parentId) onlyRoomOwner(parentId) {
         if (user == address(0)) revert InvalidAddress();
         Room storage parent = rooms[parentId];
         if (!parent.isParent) revert NotParentRoom();
@@ -337,7 +348,7 @@ contract DataRoom {
     /// @notice Revoke a user from all folders under a parent room.
     /// @param parentId  The parent room ID.
     /// @param user      Address of the user to revoke.
-    function revokeAccessFromAllFolders(uint256 parentId, address user) external onlyAdmin roomExists(parentId) {
+    function revokeAccessFromAllFolders(uint256 parentId, address user) external roomExists(parentId) onlyRoomOwner(parentId) {
         if (user == operator) revert CannotRevokeOperator();
         Room storage parent = rooms[parentId];
         if (!parent.isParent) revert NotParentRoom();
@@ -358,7 +369,7 @@ contract DataRoom {
 
     /// @notice Rotate the folder key. Re-grants access to all active members.
     /// @param roomId The folder to rekey.
-    function rekeyRoom(uint256 roomId) external onlyAdmin roomExists(roomId) notParentRoom(roomId) {
+    function rekeyRoom(uint256 roomId) external roomExists(roomId) onlyRoomOwner(roomId) notParentRoom(roomId) {
         _rekeyRoom(roomId);
     }
 
@@ -374,6 +385,22 @@ contract DataRoom {
         _isMember[roomId][user] = true;
 
         FHE.allow(_roomKey[roomId], user);
+    }
+
+    function _storeDocument(uint256 roomId, string calldata cid, string calldata name, bytes calldata wrappedKey, bytes calldata metadata)
+        internal
+        returns (uint256 docIndex)
+    {
+        docIndex = rooms[roomId].documentCount++;
+        _documents[roomId][docIndex] = Document({
+            cid: cid,
+            name: name,
+            createdAt: block.timestamp,
+            wrappedKey: wrappedKey,
+            metadata: metadata,
+            deleted: false
+        });
+        documentKeyVersion[roomId][docIndex] = roomKeyVersion[roomId];
     }
 
     /// @dev Remove a user from the packed member array (swap-and-pop).
@@ -437,7 +464,7 @@ contract DataRoom {
     /// @notice Get the encrypted folder key handle. Only decryptable if granted FHE access.
     /// @param roomId The folder to get the key for.
     function getRoomKey(uint256 roomId) external view roomExists(roomId) notParentRoom(roomId) returns (euint128) {
-        if (msg.sender != admin && msg.sender != operator && !_isMember[roomId][msg.sender]) {
+        if (msg.sender != rooms[roomId].owner && msg.sender != operator && !_isMember[roomId][msg.sender]) {
             revert Unauthorized();
         }
         return _roomKey[roomId];
@@ -464,11 +491,17 @@ contract DataRoom {
         Document storage doc = _documents[roomId][docIndex];
         if (doc.deleted) revert DocumentDeleted();
         if (doc.wrappedKey.length > 0) {
-            if (msg.sender != admin && msg.sender != operator && !_isMember[roomId][msg.sender]) {
+            if (msg.sender != rooms[roomId].owner && msg.sender != operator && !_isMember[roomId][msg.sender]) {
                 revert Unauthorized();
             }
         }
         return (doc.cid, doc.name, doc.createdAt, documentKeyVersion[roomId][docIndex], doc.wrappedKey, doc.metadata);
+    }
+
+    /// @notice Get the owner for a room or folder.
+    /// @param roomId The room or folder to query.
+    function ownerOf(uint256 roomId) external view roomExists(roomId) returns (address) {
+        return rooms[roomId].owner;
     }
 
     /// @notice Get room/folder info.
@@ -515,7 +548,7 @@ contract DataRoom {
     /// @notice Get active members of a folder.
     /// @param roomId The folder to query.
     function getMembers(uint256 roomId) external view roomExists(roomId) returns (address[] memory) {
-        if (msg.sender != admin && msg.sender != operator) revert Unauthorized();
+        if (msg.sender != rooms[roomId].owner && msg.sender != operator) revert Unauthorized();
 
         uint256 count = rooms[roomId].memberCount;
         address[] memory result = new address[](count);

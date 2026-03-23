@@ -10,15 +10,14 @@ import type { HexAddress } from "@/lib/contracts";
 interface IFolderPanelProps {
 	dataRoomAddress: HexAddress;
 	folderId: bigint;
-	boardAddress: string;
 }
 
-export function FolderPanel({ dataRoomAddress, folderId, boardAddress }: IFolderPanelProps) {
+export function FolderPanel({ dataRoomAddress, folderId }: IFolderPanelProps) {
 	const { address } = useAccount();
-	const isAdmin = !!address && boardAddress.toLowerCase() === address.toLowerCase();
 
 	const { data: folderData } = useRoom(dataRoomAddress, folderId);
-	const { data: membersData } = useRoomMembers(dataRoomAddress, folderId, isAdmin);
+	const isOwner = !!address && !!folderData && folderData.owner.toLowerCase() === address.toLowerCase();
+	const { data: membersData } = useRoomMembers(dataRoomAddress, folderId, isOwner);
 	const {
 		roomKeyHex,
 		status: decryptStatus,
@@ -72,7 +71,7 @@ export function FolderPanel({ dataRoomAddress, folderId, boardAddress }: IFolder
 							dataRoomAddress={dataRoomAddress}
 							folderId={folderId}
 							documentCount={documentCount}
-							isAdmin={isAdmin}
+							isOwner={isOwner}
 							roomKeyHex={roomKeyHex}
 						/>
 						<AccessGroup
@@ -80,8 +79,8 @@ export function FolderPanel({ dataRoomAddress, folderId, boardAddress }: IFolder
 							folderId={folderId}
 							members={members}
 							documentCount={documentCount}
-							isAdmin={isAdmin}
-							boardAddress={boardAddress}
+							isOwner={isOwner}
+							ownerAddress={folderData?.owner ?? ""}
 							roomKeyHex={roomKeyHex}
 						/>
 					</div>

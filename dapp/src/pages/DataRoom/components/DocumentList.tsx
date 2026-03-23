@@ -25,11 +25,11 @@ interface IDocumentRowProps {
 	dataRoomAddress: HexAddress;
 	folderId: bigint;
 	documentCount: number;
-	isAdmin: boolean;
+	isOwner: boolean;
 	roomKeyHex: string | null;
 }
 
-export function DocumentList({ dataRoomAddress, folderId, documentCount, isAdmin, roomKeyHex }: IDocumentRowProps) {
+export function DocumentList({ dataRoomAddress, folderId, documentCount, isOwner, roomKeyHex }: IDocumentRowProps) {
 	const { addDocuments, isPending: isAddingDoc, isConfirming: isConfirmingDoc } = useAddDocuments(dataRoomAddress);
 	const { uploadEncrypted, uploadPlain, isUploading, initialize, isReady: storachaReady } = useStoracha();
 
@@ -110,7 +110,7 @@ export function DocumentList({ dataRoomAddress, folderId, documentCount, isAdmin
 				)}
 			</div>
 
-			{isAdmin && (
+			{isOwner && (
 				<>
 					<div className="flex gap-2 mb-2 items-center">
 						<input

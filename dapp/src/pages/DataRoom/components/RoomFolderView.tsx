@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import { Plus, Users, UserPlus, UserMinus, Loader2, AlertTriangle } from "lucide-react";
 import {
 	useRoom,
@@ -15,13 +16,12 @@ import { FolderCard } from "../FolderCard";
 interface IRoomFolderViewProps {
 	dataRoomAddress: HexAddress;
 	roomId: bigint;
-	isAdmin: boolean;
 	onSelectFolder: (folderId: bigint) => void;
 }
 
-export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolder }: IRoomFolderViewProps) {
+export function RoomFolderView({ dataRoomAddress, roomId, onSelectFolder }: IRoomFolderViewProps) {
+	const { address } = useAccount();
 	const { data: roomData } = useRoom(dataRoomAddress, roomId);
-	const { data: folderIds } = useAccessibleFolders(dataRoomAddress, roomId, isAdmin);
 	const {
 		createFolder,
 		isPending: isCreatingFolder,
@@ -42,6 +42,8 @@ export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolde
 	const [showCreateFolder, setShowCreateFolder] = useState(false);
 	const [folderName, setFolderName] = useState("");
 	const [bulkMember, setBulkMember] = useState("");
+	const isOwner = !!address && !!roomData && roomData.owner.toLowerCase() === address.toLowerCase();
+	const { data: folderIds } = useAccessibleFolders(dataRoomAddress, roomId, isOwner);
 
 	if (!roomData) {
 		return (
@@ -80,7 +82,7 @@ export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolde
 				<div className="flex-1 min-w-0">
 					<div className="flex items-center justify-between mb-4">
 						<h3 className="font-semibold text-sm">Folders</h3>
-						{isAdmin && (
+						{isOwner && (
 							<Button variant="textLink" onClick={() => setShowCreateFolder(true)} size="sm">
 								<Plus className="h-4 w-4" />
 								New Folder
@@ -88,7 +90,7 @@ export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolde
 						)}
 					</div>
 
-					{isAdmin && showCreateFolder && (
+					{isOwner && showCreateFolder && (
 						<div className="border border-border rounded-lg bg-card p-4 mb-4 shadow-sm">
 							<h3 className="font-semibold text-sm mb-3">New Folder</h3>
 							<div className="flex gap-3 items-center">
@@ -128,7 +130,7 @@ export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolde
 
 					{folders.length === 0 && !isFolderBusy ? (
 						<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
-							No folders yet.{isAdmin ? " Create one to start adding documents." : ""}
+							No folders yet.{isOwner ? " Create one to start adding documents." : ""}
 						</div>
 					) : (
 						<div className="grid gap-3 sm:grid-cols-2">
@@ -137,7 +139,7 @@ export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolde
 									key={fId.toString()}
 									dataRoomAddress={dataRoomAddress}
 									folderId={fId}
-									isOwner={isAdmin}
+									isOwner={isOwner}
 									onSelect={() => onSelectFolder(fId)}
 								/>
 							))}
@@ -145,7 +147,7 @@ export function RoomFolderView({ dataRoomAddress, roomId, isAdmin, onSelectFolde
 					)}
 				</div>
 
-				{isAdmin && folders.length > 0 && (
+				{isOwner && folders.length > 0 && (
 					<div className="hidden lg:block w-64 shrink-0">
 						<div className="border border-border rounded-lg bg-card p-4 shadow-sm">
 							<h3 className="text-sm font-semibold flex items-center gap-1.5 mb-1">

@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useAccount } from "wagmi";
 import { Plus, Loader2, AlertTriangle } from "lucide-react";
-import { useRoomCount, useCreateRoom } from "@/hooks/dataroom";
+import { useCreateRoom, useVisibleParentRooms } from "@/hooks/dataroom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RoomCard } from "./RoomCard";
@@ -10,31 +9,19 @@ import { RoomFolderView } from "./components/RoomFolderView";
 import { DataRoomBreadcrumb } from "./components/DataRoomBreadcrumb";
 import type { HexAddress } from "@/lib/contracts";
 
-export function DocumentsTab({
-	dataRoomAddress,
-	adminAddress,
-}: {
-	dataRoomAddress: HexAddress;
-	adminAddress: string;
-}) {
-	const { address } = useAccount();
-
-	const isAdmin = !!address && adminAddress.toLowerCase() === address.toLowerCase();
-
-	const { data: roomCount } = useRoomCount(dataRoomAddress);
+export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress }) {
 	const {
 		createRoom,
 		isPending: isCreatingRoom,
 		isConfirming: isConfirmingRoom,
 		error: createRoomError,
 	} = useCreateRoom(dataRoomAddress);
+	const { data: visibleRooms, isLoading: isLoadingVisibleRooms } = useVisibleParentRooms(dataRoomAddress);
 
 	const [showCreateRoom, setShowCreateRoom] = useState(false);
 	const [roomName, setRoomName] = useState("");
 	const [selectedRoomId, setSelectedRoomId] = useState<bigint | null>(null);
 	const [selectedFolderId, setSelectedFolderId] = useState<bigint | null>(null);
-
-	const count = roomCount ? Number(roomCount) : 0;
 
 	const handleCreateRoom = () => {
 		if (!roomName.trim()) return;
@@ -59,7 +46,6 @@ export function DocumentsTab({
 				<FolderPanel
 					dataRoomAddress={dataRoomAddress}
 					folderId={selectedFolderId}
-					boardAddress={adminAddress}
 				/>
 			</div>
 		);
@@ -81,24 +67,24 @@ export function DocumentsTab({
 				<RoomFolderView
 					dataRoomAddress={dataRoomAddress}
 					roomId={selectedRoomId}
-					isAdmin={isAdmin}
 					onSelectFolder={(folderId) => setSelectedFolderId(folderId)}
 				/>
 			</div>
 		);
 	}
 
+	const ownedRooms = visibleRooms?.owned ?? [];
+	const sharedRooms = visibleRooms?.shared ?? [];
+
 	return (
 		<div>
-			<div id="data-rooms" className="scroll-mt-24">
+			<div id="my-data-rooms" className="scroll-mt-24">
 				<div className="flex items-center justify-between mb-6">
-					<h2 className="text-lg font-semibold">Data Rooms</h2>
-					{isAdmin && (
-						<Button variant="textLink" onClick={() => setShowCreateRoom(true)} size="sm">
-							<Plus className="h-4 w-4" />
-							New Data Room
-						</Button>
-					)}
+					<h2 className="text-lg font-semibold">My Data Rooms</h2>
+					<Button variant="textLink" onClick={() => setShowCreateRoom(true)} size="sm">
+						<Plus className="h-4 w-4" />
+						New Data Room
+					</Button>
 				</div>
 
 				{showCreateRoom && (
@@ -139,18 +125,51 @@ export function DocumentsTab({
 					</div>
 				)}
 
-				{count === 0 && !isCreatingRoom && !isConfirmingRoom ? (
+				{isLoadingVisibleRooms ? (
+					<div className="border border-border rounded-lg bg-card p-4 mb-4 flex items-center gap-3 text-sm text-muted-foreground shadow-sm">
+						<Loader2 className="h-4 w-4 animate-spin" />
+						Loading data rooms...
+					</div>
+				) : ownedRooms.length === 0 && !isCreatingRoom && !isConfirmingRoom ? (
 					<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
-						No data rooms yet.{isAdmin ? " Create one to get started." : ""}
+						No data rooms yet. Create one to get started.
 					</div>
 				) : (
 					<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-						{Array.from({ length: count }, (_, i) => (
+						{ownedRooms.map((roomId) => (
 							<RoomCard
-								key={i}
+								key={roomId.toString()}
 								dataRoomAddress={dataRoomAddress}
-								roomId={BigInt(i)}
-								onSelect={() => setSelectedRoomId(BigInt(i))}
+								roomId={roomId}
+								onSelect={() => setSelectedRoomId(roomId)}
+							/>
+						))}
+					</div>
+				)}
+			</div>
+
+			<div id="shared-with-me" className="scroll-mt-24 mt-14">
+				<div className="flex items-center justify-between mb-6">
+					<h2 className="text-lg font-semibold">Shared With Me</h2>
+				</div>
+
+				{isLoadingVisibleRooms ? (
+					<div className="border border-border rounded-lg bg-card p-4 mb-4 flex items-center gap-3 text-sm text-muted-foreground shadow-sm">
+						<Loader2 className="h-4 w-4 animate-spin" />
+						Loading shared rooms...
+					</div>
+				) : sharedRooms.length === 0 ? (
+					<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
+						No data rooms shared with you yet.
+					</div>
+				) : (
+					<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+						{sharedRooms.map((roomId) => (
+							<RoomCard
+								key={roomId.toString()}
+								dataRoomAddress={dataRoomAddress}
+								roomId={roomId}
+								onSelect={() => setSelectedRoomId(roomId)}
 							/>
 						))}
 					</div>
