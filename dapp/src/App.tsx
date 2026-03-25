@@ -120,7 +120,7 @@ function App() {
 					>
 						Faucet
 					</a>
-					<ConnectButton accountStatus="address" showBalance={false} chainStatus="name" />
+					<ConnectButton accountStatus="address" showBalance={false} chainStatus="full" />
 				</div>
 			</header>
 
