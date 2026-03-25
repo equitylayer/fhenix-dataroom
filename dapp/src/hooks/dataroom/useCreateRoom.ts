@@ -26,14 +26,27 @@ export function useCreateRoom(dataRoomAddress: HexAddress | undefined) {
 				const tx = await contract.createRoom(name);
 				setIsPending(false);
 				setIsConfirming(true);
-				await tx.wait();
+				const receipt = await tx.wait();
 				setIsConfirming(false);
-				queryClient.invalidateQueries({ refetchType: "all" });
+				await queryClient.invalidateQueries({ refetchType: "all" });
+
+				const createdRoomLog = receipt?.logs
+					.map((log) => {
+						try {
+							return contract.interface.parseLog(log);
+						} catch {
+							return null;
+						}
+					})
+					.find((parsedLog) => parsedLog?.name === "RoomCreated");
+
+				return createdRoomLog ? (createdRoomLog.args[0] as bigint) : null;
 			} catch (e) {
 				console.error("createRoom failed:", e);
 				setIsPending(false);
 				setIsConfirming(false);
 				if (!isUserRejection(e)) setError(new Error(friendlyError(e)));
+				return null;
 			}
 		},
 		[signerPromise, dataRoomAddress, queryClient],

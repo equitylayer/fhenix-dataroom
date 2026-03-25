@@ -26,14 +26,27 @@ export function useCreateFolder(dataRoomAddress: HexAddress | undefined) {
 				const tx = await contract.createFolder(parentId, name);
 				setIsPending(false);
 				setIsConfirming(true);
-				await tx.wait();
+				const receipt = await tx.wait();
 				setIsConfirming(false);
-				queryClient.invalidateQueries({ refetchType: "all" });
+				await queryClient.invalidateQueries({ refetchType: "all" });
+
+				const createdFolderLog = receipt?.logs
+					.map((log) => {
+						try {
+							return contract.interface.parseLog(log);
+						} catch {
+							return null;
+						}
+					})
+					.find((parsedLog) => parsedLog?.name === "FolderCreated");
+
+				return createdFolderLog ? (createdFolderLog.args[1] as bigint) : null;
 			} catch (e) {
 				console.error("createFolder failed:", e);
 				setIsPending(false);
 				setIsConfirming(false);
 				if (!isUserRejection(e)) setError(new Error(friendlyError(e)));
+				return null;
 			}
 		},
 		[signerPromise, dataRoomAddress, queryClient],

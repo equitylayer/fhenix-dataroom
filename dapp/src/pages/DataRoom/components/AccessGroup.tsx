@@ -105,7 +105,7 @@ export function AccessGroup({
 										<button
 											type="button"
 											onClick={() => handleRemoveChip(addr)}
-											className="hover:text-destructive"
+											className="bg-transparent border-none shadow-none p-0 hover:text-destructive"
 										>
 											<X className="h-3 w-3" />
 										</button>

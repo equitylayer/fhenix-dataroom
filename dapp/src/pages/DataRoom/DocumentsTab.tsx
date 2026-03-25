@@ -23,11 +23,14 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 	const [selectedRoomId, setSelectedRoomId] = useState<bigint | null>(null);
 	const [selectedFolderId, setSelectedFolderId] = useState<bigint | null>(null);
 
-	const handleCreateRoom = () => {
+	const handleCreateRoom = async () => {
 		if (!roomName.trim()) return;
-		createRoom(roomName.trim());
+		const createdRoomId = await createRoom(roomName.trim());
+		if (createdRoomId === null || createdRoomId === undefined) return;
 		setRoomName("");
 		setShowCreateRoom(false);
+		setSelectedFolderId(null);
+		setSelectedRoomId(createdRoomId);
 	};
 
 	if (selectedRoomId !== null && selectedFolderId !== null) {

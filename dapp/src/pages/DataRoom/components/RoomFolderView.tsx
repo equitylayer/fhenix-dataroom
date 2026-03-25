@@ -32,17 +32,20 @@ export function RoomFolderView({ dataRoomAddress, roomId, onSelectFolder }: IRoo
 		grantAccessToAllFolders,
 		isPending: isGrantingAll,
 		isConfirming: isConfirmingGrantAll,
+		error: grantAllError,
 	} = useGrantAccessToAllFolders(dataRoomAddress);
 	const {
 		revokeAccessFromAllFolders,
 		isPending: isRevokingAll,
 		isConfirming: isConfirmingRevokeAll,
+		error: revokeAllError,
 	} = useRevokeAccessFromAllFolders(dataRoomAddress);
 
 	const [showCreateFolder, setShowCreateFolder] = useState(false);
 	const [folderName, setFolderName] = useState("");
 	const [bulkMember, setBulkMember] = useState("");
 	const isOwner = !!address && !!roomData && roomData.owner.toLowerCase() === address.toLowerCase();
+	const isShareBusy = isGrantingAll || isConfirmingGrantAll || isRevokingAll || isConfirmingRevokeAll;
 	const { data: folderIds } = useAccessibleFolders(dataRoomAddress, roomId, isOwner);
 
 	if (!roomData) {
@@ -57,11 +60,13 @@ export function RoomFolderView({ dataRoomAddress, roomId, onSelectFolder }: IRoo
 	const folders = (folderIds as bigint[] | undefined) ?? [];
 	const isFolderBusy = isCreatingFolder || isConfirmingFolder;
 
-	const handleCreateFolder = () => {
+	const handleCreateFolder = async () => {
 		if (!folderName.trim()) return;
-		createFolder(roomId, folderName.trim());
+		const createdFolderId = await createFolder(roomId, folderName.trim());
+		if (createdFolderId === null || createdFolderId === undefined) return;
 		setFolderName("");
 		setShowCreateFolder(false);
+		onSelectFolder(createdFolderId);
 	};
 
 	const handleGrantAll = () => {
@@ -162,28 +167,48 @@ export function RoomFolderView({ dataRoomAddress, roomId, onSelectFolder }: IRoo
 								placeholder="0x..."
 								className="w-full text-xs font-mono mb-2"
 							/>
-							<div className="flex gap-2">
-								<Button
-									variant="textLink"
-									size="icon"
-									onClick={handleGrantAll}
-									disabled={isGrantingAll || isConfirmingGrantAll || !bulkMember.trim()}
-									title="Grant access to all folders"
-									className="flex-1"
-								>
-									<UserPlus className="h-3.5 w-3.5" />
-								</Button>
-								<Button
-									variant="dangerLink"
-									size="icon"
-									onClick={handleRevokeAll}
-									disabled={isRevokingAll || isConfirmingRevokeAll || !bulkMember.trim()}
-									title="Revoke access from all folders"
-									className="flex-1"
-								>
-									<UserMinus className="h-3.5 w-3.5" />
-								</Button>
-							</div>
+							{isShareBusy ? (
+								<div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2">
+									<Loader2 className="h-3.5 w-3.5 animate-spin" />
+									{(isGrantingAll || isRevokingAll) && "Waiting for signature..."}
+									{(isConfirmingGrantAll || isConfirmingRevokeAll) && "Confirming transaction..."}
+								</div>
+							) : (
+								<div className="flex gap-2">
+									<Button
+										variant="textLink"
+										size="icon"
+										onClick={handleGrantAll}
+										disabled={!bulkMember.trim()}
+										title="Grant access to all folders"
+										className="flex-1"
+									>
+										<UserPlus className="h-3.5 w-3.5" />
+									</Button>
+									<Button
+										variant="dangerLink"
+										size="icon"
+										onClick={handleRevokeAll}
+										disabled={!bulkMember.trim()}
+										title="Revoke access from all folders"
+										className="flex-1"
+									>
+										<UserMinus className="h-3.5 w-3.5" />
+									</Button>
+								</div>
+							)}
+							{grantAllError && (
+								<div className="mt-2 rounded px-2 py-1.5 text-xs bg-destructive/10 text-destructive">
+									<AlertTriangle className="h-3 w-3 inline mr-1" />
+									{grantAllError.message}
+								</div>
+							)}
+							{revokeAllError && (
+								<div className="mt-2 rounded px-2 py-1.5 text-xs bg-destructive/10 text-destructive">
+									<AlertTriangle className="h-3 w-3 inline mr-1" />
+									{revokeAllError.message}
+								</div>
+							)}
 						</div>
 					</div>
 				)}
