@@ -1,5 +1,6 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { Shield, Lock, Users, FileText } from "lucide-react";
 import { DocumentsTab } from "@/pages/DataRoom/DocumentsTab";
 import { DATAROOM_ADDRESS } from "@/lib/contracts";
@@ -60,10 +61,9 @@ function LandingPage() {
 					Fully homomorphic encryption for secure document storage and confidential data sharing.
 				</p>
 
-				<div className="flex items-center justify-center gap-2 mb-10">
+				<div className="flex items-center justify-center gap-2.5 mb-10">
 					<span className="text-xs text-white/30 tracking-wide uppercase orbitron">Powered by</span>
-					<img src="/fhenix-logo.svg" alt="Fhenix" className="h-4 w-4" />
-					<span className="text-xs text-white/30 tracking-wide uppercase orbitron">Fhenix</span>
+					<img src="/fhenix-logo.svg" alt="Fhenix" className="h-5" />
 				</div>
 
 				<div className="mb-16">
@@ -115,7 +115,12 @@ function App() {
 			</header>
 
 			<main className="max-w-5xl mx-auto px-6 py-8">
-				<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />
+				<Routes>
+					<Route path="/" element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />} />
+					<Route path="/room/:roomId" element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />} />
+					<Route path="/room/:roomId/folder/:folderId" element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />} />
+					<Route path="*" element={<Navigate to="/" replace />} />
+				</Routes>
 			</main>
 		</div>
 	);

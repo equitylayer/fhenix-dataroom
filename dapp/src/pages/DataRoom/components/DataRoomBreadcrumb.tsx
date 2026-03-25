@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useRoom } from "@/hooks/dataroom";
 import type { HexAddress } from "@/lib/contracts";
 
@@ -21,33 +22,31 @@ export function DataRoomBreadcrumb({
 
 	return (
 		<nav className="flex items-center gap-1.5 text-sm mb-6">
-			<span
-				role="link"
-				tabIndex={0}
-				onClick={onNavigateToRooms}
-				onKeyDown={(e) => {
-					if (e.key === "Enter") onNavigateToRooms();
+			<Link
+				to="/"
+				onClick={(e) => {
+					e.preventDefault();
+					onNavigateToRooms();
 				}}
-				className="cursor-pointer transition-colors text-muted-foreground hover:text-foreground"
+				className="transition-colors text-muted-foreground hover:text-foreground"
 			>
 				Data Rooms
-			</span>
+			</Link>
 			<span className="text-muted-foreground/50">/</span>
-			<span
-				role="link"
-				tabIndex={0}
-				onClick={onNavigateToRoom}
-				onKeyDown={(e) => {
-					if (e.key === "Enter") onNavigateToRoom();
+			<Link
+				to={`/room/${selectedRoomId.toString()}`}
+				onClick={(e) => {
+					e.preventDefault();
+					onNavigateToRoom();
 				}}
-				className={`cursor-pointer truncate max-w-48 transition-colors ${
+				className={`truncate max-w-48 transition-colors ${
 					selectedFolderId !== null
 						? "text-muted-foreground hover:text-foreground"
 						: "font-semibold text-foreground"
 				}`}
 			>
 				{roomData?.name ?? "..."}
-			</span>
+			</Link>
 			{selectedFolderId !== null && folderData && (
 				<>
 					<span className="text-muted-foreground/50">/</span>

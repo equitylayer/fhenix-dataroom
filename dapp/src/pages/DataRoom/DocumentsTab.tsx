@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Plus, Loader2, AlertTriangle } from "lucide-react";
 import { useCreateRoom, useVisibleParentRooms } from "@/hooks/dataroom";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,12 @@ import { DataRoomBreadcrumb } from "./components/DataRoomBreadcrumb";
 import type { HexAddress } from "@/lib/contracts";
 
 export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress }) {
+	const { roomId: roomIdParam, folderId: folderIdParam } = useParams();
+	const navigate = useNavigate();
+
+	const selectedRoomId = roomIdParam ? BigInt(roomIdParam) : null;
+	const selectedFolderId = folderIdParam ? BigInt(folderIdParam) : null;
+
 	const {
 		createRoom,
 		isPending: isCreatingRoom,
@@ -20,8 +27,11 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 
 	const [showCreateRoom, setShowCreateRoom] = useState(false);
 	const [roomName, setRoomName] = useState("");
-	const [selectedRoomId, setSelectedRoomId] = useState<bigint | null>(null);
-	const [selectedFolderId, setSelectedFolderId] = useState<bigint | null>(null);
+
+	const navigateToRooms = () => navigate("/");
+	const navigateToRoom = (roomId: bigint) => navigate(`/room/${roomId.toString()}`);
+	const navigateToFolder = (roomId: bigint, folderId: bigint) =>
+		navigate(`/room/${roomId.toString()}/folder/${folderId.toString()}`);
 
 	const handleCreateRoom = async () => {
 		if (!roomName.trim()) return;
@@ -29,8 +39,7 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 		if (createdRoomId === null || createdRoomId === undefined) return;
 		setRoomName("");
 		setShowCreateRoom(false);
-		setSelectedFolderId(null);
-		setSelectedRoomId(createdRoomId);
+		navigateToRoom(createdRoomId);
 	};
 
 	if (selectedRoomId !== null && selectedFolderId !== null) {
@@ -40,11 +49,8 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 					dataRoomAddress={dataRoomAddress}
 					selectedRoomId={selectedRoomId}
 					selectedFolderId={selectedFolderId}
-					onNavigateToRooms={() => {
-						setSelectedRoomId(null);
-						setSelectedFolderId(null);
-					}}
-					onNavigateToRoom={() => setSelectedFolderId(null)}
+					onNavigateToRooms={navigateToRooms}
+					onNavigateToRoom={() => navigateToRoom(selectedRoomId)}
 				/>
 				<FolderPanel
 					dataRoomAddress={dataRoomAddress}
@@ -61,16 +67,13 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 					dataRoomAddress={dataRoomAddress}
 					selectedRoomId={selectedRoomId}
 					selectedFolderId={null}
-					onNavigateToRooms={() => {
-						setSelectedRoomId(null);
-						setSelectedFolderId(null);
-					}}
-					onNavigateToRoom={() => setSelectedFolderId(null)}
+					onNavigateToRooms={navigateToRooms}
+					onNavigateToRoom={() => navigateToRoom(selectedRoomId)}
 				/>
 				<RoomFolderView
 					dataRoomAddress={dataRoomAddress}
 					roomId={selectedRoomId}
-					onSelectFolder={(folderId) => setSelectedFolderId(folderId)}
+					onSelectFolder={(folderId) => navigateToFolder(selectedRoomId, folderId)}
 				/>
 			</div>
 		);
@@ -144,7 +147,7 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 								key={roomId.toString()}
 								dataRoomAddress={dataRoomAddress}
 								roomId={roomId}
-								onSelect={() => setSelectedRoomId(roomId)}
+								onSelect={() => navigateToRoom(roomId)}
 							/>
 						))}
 					</div>
@@ -172,7 +175,7 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 								key={roomId.toString()}
 								dataRoomAddress={dataRoomAddress}
 								roomId={roomId}
-								onSelect={() => setSelectedRoomId(roomId)}
+								onSelect={() => navigateToRoom(roomId)}
 							/>
 						))}
 					</div>

@@ -122,6 +122,14 @@ button:focus-visible {
     outline-offset: 2px;
 }
 
+/* Reset for inline icon buttons (e.g. chip remove X) */
+button.btn-reset {
+    all: unset;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
 /* Component: Connect Button Group */
 .connect-button-group {
     display: inline-flex;
