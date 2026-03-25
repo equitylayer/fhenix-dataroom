@@ -4,10 +4,15 @@ import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 
 const chainId = Number(import.meta.env.VITE_CHAIN_ID || "31337");
 
+const arbitrumSepoliaWithIcon = {
+	...arbitrumSepolia,
+	iconUrl: "https://icons.llamao.fi/icons/chains/rsz_arbitrum.jpg",
+};
+
 const chains = {
 	[anvil.id]: anvil,
 	[baseSepolia.id]: baseSepolia,
-	[arbitrumSepolia.id]: arbitrumSepolia,
+	[arbitrumSepoliaWithIcon.id]: arbitrumSepoliaWithIcon,
 } as const;
 
 const chain = chains[chainId as keyof typeof chains];
