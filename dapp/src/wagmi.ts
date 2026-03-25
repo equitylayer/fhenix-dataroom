@@ -1,5 +1,5 @@
 import { http } from "wagmi";
-import { anvil, baseSepolia } from "wagmi/chains";
+import { anvil, baseSepolia, arbitrumSepolia } from "wagmi/chains";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 
 const chainId = Number(import.meta.env.VITE_CHAIN_ID || "31337");
@@ -7,6 +7,7 @@ const chainId = Number(import.meta.env.VITE_CHAIN_ID || "31337");
 const chains = {
 	[anvil.id]: anvil,
 	[baseSepolia.id]: baseSepolia,
+	[arbitrumSepolia.id]: arbitrumSepolia,
 } as const;
 
 const chain = chains[chainId as keyof typeof chains];

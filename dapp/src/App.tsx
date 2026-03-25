@@ -111,7 +111,17 @@ function App() {
 		<div className="min-h-screen bg-[#f0f0f5]">
 			<header className="border-b border-border bg-white/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between sticky top-0 z-50">
 				<img src="/favicon.svg?v=2" alt="Obolos" className="h-7 w-7" />
-				<ConnectButton accountStatus="address" showBalance={false} chainStatus="name" />
+				<div className="flex items-center gap-4">
+					<a
+						href="https://www.alchemy.com/faucets/arbitrum-sepolia"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+					>
+						Faucet
+					</a>
+					<ConnectButton accountStatus="address" showBalance={false} chainStatus="name" />
+				</div>
 			</header>
 
 			<main className="max-w-5xl mx-auto px-6 py-8">
