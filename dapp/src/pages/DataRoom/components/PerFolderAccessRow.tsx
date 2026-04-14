@@ -26,6 +26,7 @@ import {
 	useRoomMembers,
 } from "@/hooks/dataroom";
 import { useExpiredMembers } from "@/hooks/dataroom/useExpiredMembers";
+import { useEnsNames } from "@/hooks/useEnsNames";
 import type { HexAddress } from "@/lib/contracts";
 
 const PERMANENT = (1n << 256n) - 1n;
@@ -63,6 +64,7 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 	const [showRekeyWarning, setShowRekeyWarning] = useState(false);
 
 	const memberList = (members as string[] | undefined) ?? [];
+	const ensNames = useEnsNames(memberList as HexAddress[]);
 	const ownerAddr = folder?.owner?.toLowerCase();
 	const documentCount = folder ? Number(folder.documentCount) : 0;
 	const expiredList = (expiredMembers as string[] | undefined) ?? [];
@@ -296,7 +298,7 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 													markedForRemoval ? "line-through opacity-50" : ""
 												}`}
 											>
-												<CopyableAddress value={m} />
+												<CopyableAddress value={m} label={ensNames[m] ?? undefined} />
 												{ownerTag && (
 													<span className="text-primary text-[0.65rem] uppercase tracking-wider">
 														owner
@@ -361,7 +363,7 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 											key={m}
 											className="flex items-center gap-2 py-1 text-xs text-muted-foreground"
 										>
-											<CopyableAddress value={m} />
+											<CopyableAddress value={m} label={ensNames[m] ?? undefined} />
 											<span className="text-[0.65rem] uppercase tracking-wider">room-wide</span>
 										</div>
 									))}

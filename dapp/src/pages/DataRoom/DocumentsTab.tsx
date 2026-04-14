@@ -97,22 +97,22 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 		<div>
 			<div id="my-data-rooms" className="scroll-mt-24">
 				<div className="flex items-center justify-between mb-6">
-					<h2 className="text-lg font-semibold">My Data Rooms</h2>
+					<h2 className="text-lg font-semibold">My Rooms</h2>
 					<Button variant="textLink" onClick={() => setShowCreateRoom(true)} size="sm">
 						<Plus className="h-4 w-4" />
-						New Data Room
+						New Room
 					</Button>
 				</div>
 
 				{showCreateRoom && (
 					<div className="border border-border rounded-lg bg-card p-4 mb-4 shadow-sm">
-						<h3 className="font-semibold text-sm mb-3">New Data Room</h3>
+						<h3 className="font-semibold text-sm mb-3">New Room</h3>
 						<div className="flex gap-3 items-center">
 							<Input
 								type="text"
 								value={roomName}
 								onChange={(e) => setRoomName(e.target.value)}
-								placeholder="Data room name (e.g. Series A, Due Diligence)"
+								placeholder="Room name (e.g. Series A, Due Diligence)"
 								className="flex-1"
 								onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
 							/>
@@ -145,11 +145,11 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 				{isLoadingVisibleRooms ? (
 					<div className="border border-border rounded-lg bg-card p-4 mb-4 flex items-center gap-3 text-sm text-muted-foreground shadow-sm">
 						<Loader2 className="h-4 w-4 animate-spin" />
-						Loading data rooms...
+						Loading rooms...
 					</div>
 				) : ownedRooms.length === 0 && !isCreatingRoom && !isConfirmingRoom ? (
 					<div className="border border-dashed border-border rounded-lg bg-card py-12 text-center text-muted-foreground text-sm shadow-sm">
-						No data rooms yet. Create one to get started.
+						No rooms yet. Create one to get started.
 					</div>
 				) : (
 					<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -177,7 +177,7 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 					</div>
 				) : sharedRooms.length === 0 ? (
 					<div className="border border-dashed border-border rounded-lg bg-card py-12 text-center text-muted-foreground text-sm shadow-sm">
-						No data rooms shared with you yet.
+						No rooms shared with you yet.
 					</div>
 				) : (
 					<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,7 +1,7 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
-import { Shield, Users, FileText, KeyRound, Droplet } from "lucide-react";
+import { Shield, Users, HardDrive, KeyRound, Droplet } from "lucide-react";
 import { DocumentsTab } from "@/pages/DataRoom/DocumentsTab";
 import { VaultListPage } from "@/pages/SecretsVault";
 import { NamespaceDetailPage } from "@/pages/SecretsVault/NamespaceDetail";
@@ -79,13 +79,13 @@ function LandingPage() {
 			<div className="relative z-10 w-full max-w-3xl mx-auto px-6 pb-16">
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 					<FeatureCard
-						icon={FileText}
-						title="Data Rooms"
+						icon={HardDrive}
+						title="Drive"
 						description="FHE-encrypted documents with granular per-folder access control."
 					/>
 					<FeatureCard
 						icon={KeyRound}
-						title="Secrets Vault"
+						title="Secrets"
 						description="Store and share API keys, passwords and credentials on-chain."
 					/>
 					<FeatureCard
@@ -118,12 +118,12 @@ function NavLinks() {
 	return (
 		<nav className="inline-flex items-center gap-4">
 			<Link to="/" className={itemClass(isDataRoom)} style={{ textDecoration: "none" }}>
-				<FileText className="h-3.5 w-3.5" />
-				Data Room
+				<HardDrive className="h-3.5 w-3.5" />
+				Drive
 			</Link>
 			<Link to="/vault" className={itemClass(isVault)} style={{ textDecoration: "none" }}>
 				<KeyRound className="h-3.5 w-3.5" />
-				Secrets Vault
+				Secrets
 			</Link>
 		</nav>
 	);

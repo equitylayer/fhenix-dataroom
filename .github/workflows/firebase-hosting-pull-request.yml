@@ -17,9 +17,9 @@ jobs:
         with:
           node-version: 20
           cache: yarn
-          cache-dependency-path: dapp/yarn.lock
-      - name: Install dapp dependencies
-        working-directory: dapp
+          # Root yarn.lock since the repo is a yarn workspace (sdk + dapp).
+          cache-dependency-path: yarn.lock
+      - name: Install workspace dependencies
         run: yarn install --frozen-lockfile
       - name: Build dapp
         working-directory: dapp

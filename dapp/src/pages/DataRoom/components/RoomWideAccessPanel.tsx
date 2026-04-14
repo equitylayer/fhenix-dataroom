@@ -8,6 +8,7 @@ import {
 } from "@/hooks/dataroom";
 import { Button } from "@/components/ui/button";
 import { CopyableAddress } from "@/components/Button/CopyableAddress";
+import { useEnsNames } from "@/hooks/useEnsNames";
 import { formatExpiry } from "@/lib/format";
 import type { HexAddress } from "@/lib/contracts";
 
@@ -53,6 +54,7 @@ export function RoomWideAccessPanel({ dataRoomAddress, roomId }: Props) {
 
 	const roomWide = summary?.roomWide ?? [];
 	const roomWideExpiry = summary?.roomWideExpiry ?? new Map<string, bigint>();
+	const ensNames = useEnsNames(roomWide as HexAddress[]);
 	const nowSec = BigInt(Math.floor(Date.now() / 1000));
 
 	return (
@@ -90,7 +92,7 @@ export function RoomWideAccessPanel({ dataRoomAddress, roomId }: Props) {
 								className="flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-border bg-card"
 							>
 								<div className="min-w-0">
-									<CopyableAddress value={addr} />
+									<CopyableAddress value={addr} label={ensNames[addr] ?? undefined} />
 									<p className={`text-xs ${expired ? "text-destructive" : "text-muted-foreground"}`}>
 										{formatExpiry({
 											address: addr as HexAddress,
