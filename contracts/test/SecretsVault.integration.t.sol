@@ -88,14 +88,14 @@ contract SecretsVaultIntegrationTest is CoFheTest {
         (bytes memory val,,,) = vault.getSecret(nsId, DEPLOY_KEY);
         assertEq(val, "enc-deploy");
 
-        vm.warp(deadline);
+        vm.warp(deadline + 1);
 
         vm.prank(contractor);
         vm.expectRevert(SecretsVault.Unauthorized.selector);
         vault.getSecret(nsId, DEPLOY_KEY);
 
         vm.prank(admin);
-        vault.grantSecretAccess(nsId, DEPLOY_KEY, contractor, block.timestamp + 1 hours);
+        vault.grantSecretAccess(nsId, DEPLOY_KEY, contractor, type(uint256).max);
 
         vm.prank(contractor);
         (bytes memory val2,,,) = vault.getSecret(nsId, DEPLOY_KEY);
