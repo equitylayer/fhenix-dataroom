@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNamespacesByOwner, useSharedNamespaces } from "@/hooks/secretsvault/useNamespaces";
 import { useSecretKeys, useSetSecret } from "@/hooks/secretsvault/useSecrets";
+import { cn } from "@/lib/utils";
 import { setSecretSchema } from "@/lib/schemas";
 import { AccessTab } from "./components/AccessTab";
 import { SecretRow } from "./components/SecretRow";
@@ -83,37 +84,52 @@ export function NamespaceDetailPage() {
 				<span className="truncate text-foreground">{namespace?.name ?? `#${nsId}`}</span>
 			</nav>
 
-			<div className="flex items-center justify-between gap-3">
+			<div className="flex items-center justify-between gap-3 flex-wrap">
 				<h2 className="text-xl font-semibold truncate">{namespace?.name ?? "…"}</h2>
-				{activeTab === "secrets" && isOwner && (
-					<Button size="sm" onClick={() => setShowForm(!showForm)}>
-						{showForm ? "Cancel" : "+ Add Secret"}
-					</Button>
-				)}
-			</div>
 
-			<div className="flex gap-1 border-b border-border">
-				{tabs.map((tab) => (
-					<button
-						key={tab.key}
-						type="button"
-						className={`btn-reset flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors -mb-px ${
-							activeTab === tab.key
-								? "text-primary border-b-2 border-primary"
-								: "text-muted-foreground hover:text-foreground"
-						}`}
-						onClick={() => setActiveTab(tab.key)}
-					>
-						{tab.icon}
-						{tab.label}
-					</button>
-				))}
+				<div className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-sm">
+					{tabs.map((tab) => (
+						<button
+							key={tab.key}
+							type="button"
+							onClick={() => setActiveTab(tab.key)}
+							className={cn(
+								"inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs orbitron uppercase tracking-wider transition-colors cursor-pointer",
+								"!border-none !shadow-none",
+								activeTab === tab.key
+									? "!bg-primary/10 !text-primary"
+									: "!bg-transparent !text-muted-foreground hover:!text-foreground hover:!bg-accent/50",
+							)}
+						>
+							{tab.icon}
+							{tab.label}
+						</button>
+					))}
+				</div>
 			</div>
 
 			{activeTab === "secrets" && (
-				<div className="space-y-6">
+				<div className="rounded-lg border border-border bg-card p-5 shadow-sm space-y-4">
+					<div className="flex items-center justify-between gap-2">
+						<div className="flex items-center gap-2">
+							<KeyRound className="h-4 w-4 text-primary" />
+							<h3 className="text-sm font-semibold">Secrets</h3>
+						</div>
+						{isOwner && (
+							<Button size="sm" variant="outline" onClick={() => setShowForm(!showForm)}>
+								{showForm ? "Cancel" : "+ Add Secret"}
+							</Button>
+						)}
+					</div>
+					<p className="text-xs text-muted-foreground">
+						Encrypted values stored on-chain. Only granted wallets can decrypt.
+					</p>
+
 					{showForm && (
-						<form onSubmit={handleAdd} className="space-y-3 rounded-lg border border-border bg-card p-5 shadow-sm">
+						<form
+							onSubmit={handleAdd}
+							className="space-y-3 rounded-md border border-border bg-accent/20 p-4"
+						>
 							<Input
 								type="text"
 								value={key}
@@ -141,23 +157,22 @@ export function NamespaceDetailPage() {
 						</form>
 					)}
 
-					{isLoading && (
-						<div className="border border-border rounded-lg bg-card p-4 flex items-center gap-3 text-sm text-muted-foreground shadow-sm">
-							<Loader2 className="h-4 w-4 animate-spin" />
+					{isLoading ? (
+						<div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+							<Loader2 className="h-3 w-3 animate-spin" />
 							Loading secrets…
 						</div>
+					) : secretKeys?.length === 0 ? (
+						<p className="py-8 text-muted-foreground text-sm text-center">
+							No secrets yet.{isOwner ? " Add one above." : ""}
+						</p>
+					) : (
+						<div className="divide-y divide-border rounded-md border border-border overflow-hidden">
+							{secretKeys?.map((k) => (
+								<SecretRow key={k} namespaceId={namespaceId!} secretKey={k} isOwner={isOwner} />
+							))}
+						</div>
 					)}
-
-					<div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden divide-y divide-border">
-						{!isLoading && secretKeys?.length === 0 && (
-							<p className="px-5 py-12 text-muted-foreground text-sm text-center">
-								No secrets yet.{isOwner ? " Add one above." : ""}
-							</p>
-						)}
-						{secretKeys?.map((k) => (
-							<SecretRow key={k} namespaceId={namespaceId!} secretKey={k} isOwner={isOwner} />
-						))}
-					</div>
 				</div>
 			)}
 

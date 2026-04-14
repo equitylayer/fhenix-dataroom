@@ -4,6 +4,7 @@ import type { HexAddress } from "./types";
 
 export const DEPLOYMENTS: Record<string, Record<string, HexAddress>> = {
   "31337": {
-    "DataRoom": "0x59b670e9fa9d0a427751af201d676719a970857b"
+    "DataRoom": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+    "SecretsVault": "0xa513e6e4b8f2a923d98304ec87f64353c4d5c853"
   }
 } as const;

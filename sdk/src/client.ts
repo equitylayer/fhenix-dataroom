@@ -3,6 +3,7 @@ import {
 	toHex,
 	hexToBytes,
 	parseEventLogs,
+	type Hash,
 	type PublicClient,
 	type WalletClient,
 } from "viem";
@@ -56,9 +57,22 @@ export class SecretsVaultClient {
 		return { account: this.address };
 	}
 
+	/**
+	 * Wait for a TX receipt and throw if it reverted. Without this check, viem
+	 * returns silently-reverted receipts, which manifests as confusing downstream
+	 * read errors (e.g. "secret not found after 6 attempts").
+	 */
+	private async waitAndCheck(hash: Hash, label: string) {
+		const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+		if (receipt.status !== "success") {
+			throw new Error(`${label} reverted on-chain (tx ${hash}). Check namespace ownership and sender address.`);
+		}
+		return receipt;
+	}
+
 	async createNamespace(name: string): Promise<bigint> {
 		const hash = await this.contract.write.createNamespace([name]);
-		const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+		const receipt = await this.waitAndCheck(hash, "createNamespace");
 		const events = parseEventLogs({
 			abi: SECRETS_VAULT_ABI,
 			logs: receipt.logs,
@@ -118,20 +132,25 @@ export class SecretsVaultClient {
 			encryptedValue ? toHex(encryptedValue) : "0x",
 			toHex(encryptedNsValue),
 		]);
-		await this.publicClient.waitForTransactionReceipt({ hash });
+		await this.waitAndCheck(hash, "setSecret");
 
-		// 5. For new secrets: second TX to backfill the per-secret encrypted value
+		// 5. For new secrets: second TX to backfill the per-secret encrypted value.
+		// Brief poll for block propagation; waitAndCheck above already proved the TX succeeded,
+		// so any persistent revert here is a deeper problem — surface it.
 		if (!encryptedValue) {
 			let secretHandle: Awaited<ReturnType<typeof this.contract.read.getSecretKeyHandle>>;
-			for (let attempt = 0; ; attempt++) {
+			let lastErr: unknown;
+			for (let attempt = 0; attempt < 3; attempt++) {
 				try {
 					secretHandle = await this.contract.read.getSecretKeyHandle([namespaceId, key], this.readOpts);
+					lastErr = undefined;
 					break;
-				} catch {
-					if (attempt >= 5) throw new Error(`Secret key not available after ${attempt + 1} attempts`);
-					await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+				} catch (e) {
+					lastErr = e;
+					await new Promise((r) => setTimeout(r, 500));
 				}
 			}
+			if (lastErr) throw lastErr;
 			const secretKeyHex = await this.decryptFheKey(secretHandle);
 			const encrypted = await encryptSecret(value, secretKeyHex);
 
@@ -141,7 +160,7 @@ export class SecretsVaultClient {
 				toHex(encrypted),
 				toHex(encryptedNsValue),
 			]);
-			await this.publicClient.waitForTransactionReceipt({ hash: hash2 });
+			await this.waitAndCheck(hash2, "setSecret (backfill)");
 		}
 	}
 
@@ -174,7 +193,7 @@ export class SecretsVaultClient {
 
 	async deleteSecret(namespaceId: bigint, key: string): Promise<void> {
 		const hash = await this.contract.write.deleteSecret([namespaceId, key]);
-		await this.publicClient.waitForTransactionReceipt({ hash });
+		await this.waitAndCheck(hash, "deleteSecret");
 	}
 
 	async listSecrets(namespaceId: bigint): Promise<string[]> {
@@ -185,12 +204,12 @@ export class SecretsVaultClient {
 	async grantNamespaceAccess(namespaceId: bigint, account: HexAddress, expiresAt?: bigint): Promise<void> {
 		const expiry = expiresAt ?? PERMANENT;
 		const hash = await this.contract.write.grantNamespaceAccess([namespaceId, account, expiry]);
-		await this.publicClient.waitForTransactionReceipt({ hash });
+		await this.waitAndCheck(hash, "grantNamespaceAccess");
 	}
 
 	async revokeNamespaceAccess(namespaceId: bigint, account: HexAddress): Promise<void> {
 		const hash = await this.contract.write.revokeNamespaceAccess([namespaceId, account]);
-		await this.publicClient.waitForTransactionReceipt({ hash });
+		await this.waitAndCheck(hash, "revokeNamespaceAccess");
 	}
 
 	async listNamespaceGrantees(namespaceId: bigint): Promise<Grantee[]> {
@@ -218,12 +237,12 @@ export class SecretsVaultClient {
 	): Promise<void> {
 		const expiry = expiresAt ?? PERMANENT;
 		const hash = await this.contract.write.grantSecretAccess([namespaceId, key, account, expiry]);
-		await this.publicClient.waitForTransactionReceipt({ hash });
+		await this.waitAndCheck(hash, "grantSecretAccess");
 	}
 
 	async revokeSecretAccess(namespaceId: bigint, key: string, account: HexAddress): Promise<void> {
 		const hash = await this.contract.write.revokeSecretAccess([namespaceId, key, account]);
-		await this.publicClient.waitForTransactionReceipt({ hash });
+		await this.waitAndCheck(hash, "revokeSecretAccess");
 	}
 
 	async listSecretGrantees(namespaceId: bigint, key: string): Promise<Grantee[]> {

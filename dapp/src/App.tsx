@@ -61,7 +61,7 @@ function LandingPage() {
 				</h2>
 
 				<p className="text-base text-white/50 mb-3 max-w-md mx-auto leading-relaxed">
-					Self-sovereign cloud — FHE-encrypted document storage and secrets management, on-chain.
+					Share files and secrets with your team. Encrypted on-chain, keys in your wallet.
 				</p>
 
 				<div className="flex items-center justify-center gap-2.5 mb-10">
