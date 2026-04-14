@@ -39,6 +39,7 @@ export interface DataRoomInterface extends Interface {
       | "getParentRoom"
       | "getRoom"
       | "getRoomKey"
+      | "getRoomWideGrantees"
       | "grantAccess"
       | "grantAccessToAllFolders"
       | "hasAccess"
@@ -112,6 +113,10 @@ export interface DataRoomInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getRoomKey",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getRoomWideGrantees",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -209,6 +214,10 @@ export interface DataRoomInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "getRoom", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getRoomKey", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getRoomWideGrantees",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "grantAccess",
     data: BytesLike
@@ -472,6 +481,12 @@ export interface DataRoom extends BaseContract {
 
   getRoomKey: TypedContractMethod<[roomId: BigNumberish], [string], "view">;
 
+  getRoomWideGrantees: TypedContractMethod<
+    [parentId: BigNumberish],
+    [string[]],
+    "view"
+  >;
+
   grantAccess: TypedContractMethod<
     [roomId: BigNumberish, users: AddressLike[]],
     [void],
@@ -653,6 +668,9 @@ export interface DataRoom extends BaseContract {
   getFunction(
     nameOrSignature: "getRoomKey"
   ): TypedContractMethod<[roomId: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "getRoomWideGrantees"
+  ): TypedContractMethod<[parentId: BigNumberish], [string[]], "view">;
   getFunction(
     nameOrSignature: "grantAccess"
   ): TypedContractMethod<

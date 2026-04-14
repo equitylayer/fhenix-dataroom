@@ -517,6 +517,37 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         vm.stopPrank();
     }
 
+    function test_getRoomWideGrantees_tracksIntent() public {
+        address otherMember = makeAddr("otherMember");
+
+        vm.startPrank(board);
+        room.createFolder(PARENT, "Financials");
+
+        // Per-folder grant should NOT appear in room-wide grantees
+        room.grantAccess(FOLDER, _addrs(otherMember));
+        assertEq(room.getRoomWideGrantees(PARENT).length, 0);
+
+        // Room-wide grant does appear
+        room.grantAccessToAllFolders(PARENT, member);
+        address[] memory roomWide = room.getRoomWideGrantees(PARENT);
+        assertEq(roomWide.length, 1);
+        assertEq(roomWide[0], member);
+
+        // Revoke-all removes from the set
+        room.revokeAccessFromAllFolders(PARENT, member);
+        assertEq(room.getRoomWideGrantees(PARENT).length, 0);
+
+        // Per-folder user still exists as folder member but not room-wide
+        assertEq(room.getMembers(FOLDER).length, 2); // owner + otherMember
+        vm.stopPrank();
+    }
+
+    function test_getRoomWideGrantees_rejectsNonAdmin() public {
+        vm.prank(member);
+        vm.expectRevert(DataRoom.Unauthorized.selector);
+        room.getRoomWideGrantees(PARENT);
+    }
+
     function test_grantAccessToAllFolders_reGrantAfterRevokeAll() public {
         vm.startPrank(board);
         room.createFolder(PARENT, "Financials");

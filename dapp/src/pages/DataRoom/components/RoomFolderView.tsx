@@ -1,23 +1,21 @@
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { Plus, Users, UserPlus, UserMinus, Loader2, AlertTriangle } from "lucide-react";
-import {
-	useRoom,
-	useAccessibleFolders,
-	useCreateFolder,
-	useGrantAccessToAllFolders,
-	useRevokeAccessFromAllFolders,
-} from "@/hooks/dataroom";
+import { FolderOpen, Plus, Shield, Loader2, AlertTriangle } from "lucide-react";
+import { useRoom, useAccessibleFolders, useCreateFolder } from "@/hooks/dataroom";
 import type { HexAddress } from "@/lib/contracts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { FolderCard } from "../FolderCard";
+import { RoomAccessTab } from "./RoomAccessTab";
 
 interface IRoomFolderViewProps {
 	dataRoomAddress: HexAddress;
 	roomId: bigint;
 	onSelectFolder: (folderId: bigint) => void;
 }
+
+type Tab = "folders" | "access";
 
 export function RoomFolderView({ dataRoomAddress, roomId, onSelectFolder }: IRoomFolderViewProps) {
 	const { address } = useAccount();
@@ -28,24 +26,12 @@ export function RoomFolderView({ dataRoomAddress, roomId, onSelectFolder }: IRoo
 		isConfirming: isConfirmingFolder,
 		error: createFolderError,
 	} = useCreateFolder(dataRoomAddress);
-	const {
-		grantAccessToAllFolders,
-		isPending: isGrantingAll,
-		isConfirming: isConfirmingGrantAll,
-		error: grantAllError,
-	} = useGrantAccessToAllFolders(dataRoomAddress);
-	const {
-		revokeAccessFromAllFolders,
-		isPending: isRevokingAll,
-		isConfirming: isConfirmingRevokeAll,
-		error: revokeAllError,
-	} = useRevokeAccessFromAllFolders(dataRoomAddress);
 
 	const [showCreateFolder, setShowCreateFolder] = useState(false);
 	const [folderName, setFolderName] = useState("");
-	const [bulkMember, setBulkMember] = useState("");
+	const [activeTab, setActiveTab] = useState<Tab>("folders");
+
 	const isOwner = !!address && !!roomData && roomData.owner.toLowerCase() === address.toLowerCase();
-	const isShareBusy = isGrantingAll || isConfirmingGrantAll || isRevokingAll || isConfirmingRevokeAll;
 	const { data: folderIds } = useAccessibleFolders(dataRoomAddress, roomId, isOwner);
 
 	if (!roomData) {
@@ -69,22 +55,39 @@ export function RoomFolderView({ dataRoomAddress, roomId, onSelectFolder }: IRoo
 		onSelectFolder(createdFolderId);
 	};
 
-	const handleGrantAll = () => {
-		if (!bulkMember.trim()) return;
-		grantAccessToAllFolders(roomId, bulkMember.trim());
-		setBulkMember("");
-	};
-
-	const handleRevokeAll = () => {
-		if (!bulkMember.trim()) return;
-		revokeAccessFromAllFolders(roomId, bulkMember.trim());
-		setBulkMember("");
-	};
+	const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+		{ key: "folders", label: "Folders", icon: <FolderOpen className="h-3.5 w-3.5" /> },
+		...(isOwner ? [{ key: "access" as Tab, label: "Access", icon: <Shield className="h-3.5 w-3.5" /> }] : []),
+	];
 
 	return (
-		<div id="folders" className="scroll-mt-24">
-			<div className="flex gap-6 items-start">
-				<div className="flex-1 min-w-0">
+		<div className="space-y-6">
+			{tabs.length > 1 && (
+				<div className="flex justify-end">
+					<div className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-sm">
+						{tabs.map((tab) => (
+							<button
+								key={tab.key}
+								type="button"
+								onClick={() => setActiveTab(tab.key)}
+								className={cn(
+									"inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs orbitron uppercase tracking-wider transition-colors cursor-pointer",
+									"!border-none !shadow-none",
+									activeTab === tab.key
+										? "!bg-primary/10 !text-primary"
+										: "!bg-transparent !text-muted-foreground hover:!text-foreground hover:!bg-accent/50",
+								)}
+							>
+								{tab.icon}
+								{tab.label}
+							</button>
+						))}
+					</div>
+				</div>
+			)}
+
+			{activeTab === "folders" && (
+				<div id="folders" className="scroll-mt-24">
 					<div className="flex items-center justify-between mb-4">
 						<h3 className="font-semibold text-sm">Folders</h3>
 						{isOwner && (
@@ -151,68 +154,11 @@ export function RoomFolderView({ dataRoomAddress, roomId, onSelectFolder }: IRoo
 						</div>
 					)}
 				</div>
+			)}
 
-				{isOwner && folders.length > 0 && (
-					<div className="hidden lg:block w-64 shrink-0">
-						<div className="border border-border rounded-lg bg-card p-4 shadow-sm">
-							<h3 className="text-sm font-semibold flex items-center gap-1.5 mb-1">
-								<Users className="h-4 w-4" />
-								Share access
-							</h3>
-							<p className="text-xs text-muted-foreground mb-3">Grant or revoke across all folders.</p>
-							<Input
-								type="text"
-								value={bulkMember}
-								onChange={(e) => setBulkMember(e.target.value)}
-								placeholder="0x..."
-								className="w-full text-xs font-mono mb-2"
-							/>
-							{isShareBusy ? (
-								<div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2">
-									<Loader2 className="h-3.5 w-3.5 animate-spin" />
-									{(isGrantingAll || isRevokingAll) && "Waiting for signature..."}
-									{(isConfirmingGrantAll || isConfirmingRevokeAll) && "Confirming transaction..."}
-								</div>
-							) : (
-								<div className="flex gap-2">
-									<Button
-										variant="textLink"
-										size="icon"
-										onClick={handleGrantAll}
-										disabled={!bulkMember.trim()}
-										title="Grant access to all folders"
-										className="flex-1"
-									>
-										<UserPlus className="h-3.5 w-3.5" />
-									</Button>
-									<Button
-										variant="dangerLink"
-										size="icon"
-										onClick={handleRevokeAll}
-										disabled={!bulkMember.trim()}
-										title="Revoke access from all folders"
-										className="flex-1"
-									>
-										<UserMinus className="h-3.5 w-3.5" />
-									</Button>
-								</div>
-							)}
-							{grantAllError && (
-								<div className="mt-2 rounded px-2 py-1.5 text-xs bg-destructive/10 text-destructive">
-									<AlertTriangle className="h-3 w-3 inline mr-1" />
-									{grantAllError.message}
-								</div>
-							)}
-							{revokeAllError && (
-								<div className="mt-2 rounded px-2 py-1.5 text-xs bg-destructive/10 text-destructive">
-									<AlertTriangle className="h-3 w-3 inline mr-1" />
-									{revokeAllError.message}
-								</div>
-							)}
-						</div>
-					</div>
-				)}
-			</div>
+			{activeTab === "access" && isOwner && (
+				<RoomAccessTab dataRoomAddress={dataRoomAddress} roomId={roomId} isOwner={isOwner} />
+			)}
 		</div>
 	);
 }

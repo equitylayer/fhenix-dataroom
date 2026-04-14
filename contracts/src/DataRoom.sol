@@ -2,10 +2,13 @@
 pragma solidity ^0.8.24;
 
 import {FHE, euint128} from "@fhenixprotocol/cofhe-contracts/FHE.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /// @title DataRoom
 /// @notice Trustless data room with FHE-encrypted access control.
 contract DataRoom {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     // Errors
     error OnlyAdmin();
     error RoomNotFound();
@@ -65,6 +68,10 @@ contract DataRoom {
 
     /// @dev parentId => child index => roomId
     mapping(uint256 => mapping(uint256 => uint256)) private _children;
+
+    /// @dev parentId => set of addresses that have been granted access at the room level.
+    ///      Distinct from per-folder membership (which is union). Tracks intent, not derived.
+    mapping(uint256 => EnumerableSet.AddressSet) private _roomWideAccess;
 
     // Public Events
     event RoomCreated(uint256 indexed roomId, address indexed creator);
@@ -335,6 +342,8 @@ contract DataRoom {
         Room storage parent = rooms[parentId];
         if (!parent.isParent) revert NotParentRoom();
 
+        _roomWideAccess[parentId].add(user);
+
         for (uint256 i = 0; i < parent.childCount;) {
             uint256 roomId = _children[parentId][i];
             _grantUser(roomId, user);
@@ -352,6 +361,8 @@ contract DataRoom {
         if (user == operator) revert CannotRevokeOperator();
         Room storage parent = rooms[parentId];
         if (!parent.isParent) revert NotParentRoom();
+
+        _roomWideAccess[parentId].remove(user);
 
         for (uint256 i = 0; i < parent.childCount;) {
             uint256 roomId = _children[parentId][i];
@@ -559,5 +570,14 @@ contract DataRoom {
             }
         }
         return result;
+    }
+
+    /// @notice Get addresses that were granted access at the room-wide level (via
+    ///         `grantAccessToAllFolders`), distinct from per-folder grants.
+    /// @param parentId The parent room ID.
+    function getRoomWideGrantees(uint256 parentId) external view roomExists(parentId) returns (address[] memory) {
+        if (msg.sender != rooms[parentId].owner && msg.sender != operator) revert Unauthorized();
+        if (!rooms[parentId].isParent) revert NotParentRoom();
+        return _roomWideAccess[parentId].values();
     }
 }
