@@ -1,8 +1,11 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { Shield, Lock, Users, FileText } from "lucide-react";
+import { Routes, Route, Navigate, Link, NavLink } from "react-router-dom";
+import { Shield, Lock, Users, FileText, KeyRound } from "lucide-react";
 import { DocumentsTab } from "@/pages/DataRoom/DocumentsTab";
+import { VaultListPage } from "@/pages/SecretsVault";
+import { NamespaceDetailPage } from "@/pages/SecretsVault/NamespaceDetail";
+import { SecretsVaultProvider } from "@/hooks/useSecretsVaultClient";
 import { DATAROOM_ADDRESS } from "@/lib/contracts";
 
 function FeatureCard({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) {
@@ -54,11 +57,11 @@ function LandingPage() {
 				</div>
 
 				<h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4 bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
-					Obolos DataRoom
+					Obolos
 				</h2>
 
 				<p className="text-base text-white/50 mb-3 max-w-md mx-auto leading-relaxed">
-					Fully homomorphic encryption for secure document storage and confidential data sharing.
+					Self-sovereign cloud — FHE-encrypted document storage and secrets management, on-chain.
 				</p>
 
 				<div className="flex items-center justify-center gap-2.5 mb-10">
@@ -75,28 +78,46 @@ function LandingPage() {
 			<div className="relative z-10 w-full max-w-3xl mx-auto px-6 pb-16">
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 					<FeatureCard
-						icon={Shield}
-						title="FHE Encrypted"
-						description="Documents encrypted with fully homomorphic encryption, on-chain."
+						icon={FileText}
+						title="Data Rooms"
+						description="FHE-encrypted documents with granular per-folder access control."
 					/>
 					<FeatureCard
-						icon={Lock}
-						title="Access Control"
-						description="Granular per-folder permissions with on-chain key management."
+						icon={KeyRound}
+						title="Secrets Vault"
+						description="Store and share API keys, passwords and credentials on-chain."
+					/>
+					<FeatureCard
+						icon={Shield}
+						title="FHE Encrypted"
+						description="Keys encrypted with fully homomorphic encryption, always."
 					/>
 					<FeatureCard
 						icon={Users}
-						title="Secure Sharing"
-						description="Share encrypted data rooms with specific wallet addresses."
-					/>
-					<FeatureCard
-						icon={FileText}
-						title="Organized"
-						description="Rooms and folders to keep your confidential documents structured."
+						title="Access Control"
+						description="Grant and revoke access by wallet, with optional expiry."
 					/>
 				</div>
 			</div>
 		</div>
+	);
+}
+
+function NavLinks() {
+	const linkClass = ({ isActive }: { isActive: boolean }) =>
+		`text-xs orbitron tracking-wider uppercase transition-colors ${
+			isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+		}`;
+
+	return (
+		<nav className="flex items-center gap-6">
+			<NavLink to="/" end className={linkClass}>
+				Data Room
+			</NavLink>
+			<NavLink to="/vault" className={linkClass}>
+				Secrets Vault
+			</NavLink>
+		</nav>
 	);
 }
 
@@ -108,31 +129,47 @@ function App() {
 	}
 
 	return (
-		<div className="min-h-screen bg-[#f0f0f5]">
-			<header className="border-b border-border bg-white/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between sticky top-0 z-50">
-				<img src="/favicon.svg?v=2" alt="Obolos" className="h-7 w-7" />
-				<div className="flex items-center gap-4">
-					<a
-						href="https://www.alchemy.com/faucets/arbitrum-sepolia"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-					>
-						Faucet
-					</a>
-					<ConnectButton accountStatus="address" showBalance={false} chainStatus="full" />
-				</div>
-			</header>
+		<SecretsVaultProvider>
+			<div className="min-h-screen bg-[#f0f0f5]">
+				<header className="border-b border-border bg-white/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+					<div className="flex items-center gap-6">
+						<Link to="/" style={{ textDecoration: "none" }}>
+							<img src="/favicon.svg?v=2" alt="Obolos" className="h-7 w-7" />
+						</Link>
+						<NavLinks />
+					</div>
+					<div className="flex items-center gap-4">
+						<a
+							href="https://www.alchemy.com/faucets/arbitrum-sepolia"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+						>
+							Faucet
+						</a>
+						<ConnectButton accountStatus="address" showBalance={false} chainStatus="full" />
+					</div>
+				</header>
 
-			<main className="max-w-5xl mx-auto px-6 py-8">
-				<Routes>
-					<Route path="/" element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />} />
-					<Route path="/room/:roomId" element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />} />
-					<Route path="/room/:roomId/folder/:folderId" element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />} />
-					<Route path="*" element={<Navigate to="/" replace />} />
-				</Routes>
-			</main>
-		</div>
+				<main className="max-w-5xl mx-auto px-6 py-8">
+					<Routes>
+						{/* Data Room */}
+						<Route path="/" element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />} />
+						<Route path="/room/:roomId" element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />} />
+						<Route
+							path="/room/:roomId/folder/:folderId"
+							element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />}
+						/>
+
+						{/* Secrets Vault */}
+						<Route path="/vault" element={<VaultListPage />} />
+						<Route path="/vault/:nsId" element={<NamespaceDetailPage />} />
+
+						<Route path="*" element={<Navigate to="/" replace />} />
+					</Routes>
+				</main>
+			</div>
+		</SecretsVaultProvider>
 	);
 }
 

@@ -21,5 +21,10 @@ if (!dataRoomAddress) {
 	throw new Error(`DataRoom not found in ${CHAIN_ID}.contracts.json`);
 }
 
+const secretsVaultAddress = contracts.SecretsVault;
+
 export const DATAROOM_ADDRESS = dataRoomAddress as HexAddress;
+export const SECRETS_VAULT_ADDRESS = (secretsVaultAddress ?? null) as HexAddress | null;
 export const CONTRACTS_MAP = contracts;
+
+export const RPC_URL = CHAIN_ID === 31337 ? "http://127.0.0.1:8545" : import.meta.env.VITE_RPC_URL || undefined;

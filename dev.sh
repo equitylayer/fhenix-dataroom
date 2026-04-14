@@ -25,8 +25,8 @@ install_deps() {
   cd "$ROOT/contracts"
   yarn install --frozen-lockfile 2>/dev/null || yarn install
 
-  info "Installing dapp dependencies…"
-  cd "$ROOT/dapp"
+  info "Installing workspace dependencies (sdk + dapp)…"
+  cd "$ROOT"
   yarn install --frozen-lockfile 2>/dev/null || yarn install
 }
 
@@ -37,7 +37,7 @@ run_stack() {
   ANVIL_PID=$!
   sleep 2
 
-  # Deploy contracts + copy ABIs + start vite
+  # Deploy contracts + pull ABIs (SDK + dapp) + start vite
   info "Deploying contracts & starting dapp…"
   cd "$ROOT/dapp"
   yarn dev:stack &

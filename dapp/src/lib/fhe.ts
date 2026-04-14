@@ -87,3 +87,6 @@ export async function decryptRoomKey(handle: string, walletClient: WalletClient)
 	setCached(handle, hex);
 	return hex;
 }
+
+/** Same decrypt flow as decryptRoomKey — used by the SecretsVault SDK for namespace/secret FHE keys. */
+export const decryptNsKey = decryptRoomKey;

@@ -3,12 +3,13 @@ pragma solidity ^0.8.24;
 
 import "forge-std/Script.sol";
 import {DataRoom} from "../src/DataRoom.sol";
+import {SecretsVault} from "../src/SecretsVault.sol";
 import {MockTaskManager} from "@cofhe/mock-contracts/MockTaskManager.sol";
 import {MockThresholdNetwork} from "@cofhe/mock-contracts/MockThresholdNetwork.sol";
 import {TASK_MANAGER_ADDRESS} from "@fhenixprotocol/cofhe-contracts/FHE.sol";
 
 /// @title DeployLocal
-/// @notice Initialises CoFHE mocks (pre-etched) then deploys DataRoom. Anvil only.
+/// @notice Initialises CoFHE mocks (pre-etched) then deploys DataRoom + SecretsVault. Anvil only.
 contract DeployLocal is Script {
     address constant ACL_ADDR = 0xa6Ea4b5291d044D93b73b3CFf3109A1128663E8B;
     address constant THRESHOLD_NETWORK_ADDR = 0x0000000000000000000000000000000000005002;
@@ -41,9 +42,14 @@ contract DeployLocal is Script {
         console.log("\n--- DataRoom ---");
         DataRoom dataRoom = new DataRoom();
         dataRoom.initialize(admin, operator);
-
         console.log("DataRoom deployed at:", address(dataRoom));
-        console.log("  admin:", admin);
+
+        // 3) Deploy SecretsVault (shared admin)
+        console.log("\n--- SecretsVault ---");
+        SecretsVault secretsVault = new SecretsVault(admin);
+        console.log("SecretsVault deployed at:", address(secretsVault));
+
+        console.log("\n  admin:   ", admin);
         console.log("  operator:", operator);
 
         vm.stopBroadcast();
