@@ -6,6 +6,7 @@ export { useAccessibleFolders } from "./useAccessibleFolders";
 export { useDocument } from "./useDocument";
 export { useRoomMembers } from "./useRoomMembers";
 export { useRoomAccessSummary } from "./useRoomAccessSummary";
+export { useExpiredMembers } from "./useExpiredMembers";
 export { useRoomKeyHandle, useRoomKey } from "./useRoomKey";
 export { useDecryptFolder } from "./useDecryptFolder";
 export type { DecryptStatus } from "./useDecryptFolder";

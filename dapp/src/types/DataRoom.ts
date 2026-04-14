@@ -28,17 +28,21 @@ export interface DataRoomInterface extends Interface {
     nameOrSignature:
       | "MAX_BATCH_SIZE"
       | "NO_PARENT"
+      | "PERMANENT"
       | "addDocuments"
       | "admin"
       | "createFolder"
       | "createRoom"
       | "documentKeyVersion"
       | "getDocument"
+      | "getExpiredMembers"
       | "getFolders"
+      | "getMemberExpiry"
       | "getMembers"
       | "getParentRoom"
       | "getRoom"
       | "getRoomKey"
+      | "getRoomWideExpiry"
       | "getRoomWideGrantees"
       | "grantAccess"
       | "grantAccessToAllFolders"
@@ -77,6 +81,7 @@ export interface DataRoomInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "NO_PARENT", values?: undefined): string;
+  encodeFunctionData(functionFragment: "PERMANENT", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "addDocuments",
     values: [BigNumberish, string[], string[], BytesLike[], BytesLike[]]
@@ -96,8 +101,16 @@ export interface DataRoomInterface extends Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "getExpiredMembers",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getFolders",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getMemberExpiry",
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "getMembers",
@@ -116,16 +129,20 @@ export interface DataRoomInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "getRoomWideExpiry",
+    values: [BigNumberish, AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "getRoomWideGrantees",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "grantAccess",
-    values: [BigNumberish, AddressLike[]]
+    values: [BigNumberish, AddressLike[], BigNumberish[]]
   ): string;
   encodeFunctionData(
     functionFragment: "grantAccessToAllFolders",
-    values: [BigNumberish, AddressLike]
+    values: [BigNumberish, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "hasAccess",
@@ -188,6 +205,7 @@ export interface DataRoomInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "NO_PARENT", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "PERMANENT", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "addDocuments",
     data: BytesLike
@@ -206,7 +224,15 @@ export interface DataRoomInterface extends Interface {
     functionFragment: "getDocument",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "getExpiredMembers",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "getFolders", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getMemberExpiry",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "getMembers", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getParentRoom",
@@ -214,6 +240,10 @@ export interface DataRoomInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "getRoom", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getRoomKey", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getRoomWideExpiry",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getRoomWideGrantees",
     data: BytesLike
@@ -415,6 +445,8 @@ export interface DataRoom extends BaseContract {
 
   NO_PARENT: TypedContractMethod<[], [bigint], "view">;
 
+  PERMANENT: TypedContractMethod<[], [bigint], "view">;
+
   addDocuments: TypedContractMethod<
     [
       roomId: BigNumberish,
@@ -458,7 +490,19 @@ export interface DataRoom extends BaseContract {
     "view"
   >;
 
+  getExpiredMembers: TypedContractMethod<
+    [roomId: BigNumberish],
+    [string[]],
+    "view"
+  >;
+
   getFolders: TypedContractMethod<[parentId: BigNumberish], [bigint[]], "view">;
+
+  getMemberExpiry: TypedContractMethod<
+    [roomId: BigNumberish, user: AddressLike],
+    [bigint],
+    "view"
+  >;
 
   getMembers: TypedContractMethod<[roomId: BigNumberish], [string[]], "view">;
 
@@ -481,6 +525,12 @@ export interface DataRoom extends BaseContract {
 
   getRoomKey: TypedContractMethod<[roomId: BigNumberish], [string], "view">;
 
+  getRoomWideExpiry: TypedContractMethod<
+    [parentId: BigNumberish, user: AddressLike],
+    [bigint],
+    "view"
+  >;
+
   getRoomWideGrantees: TypedContractMethod<
     [parentId: BigNumberish],
     [string[]],
@@ -488,13 +538,13 @@ export interface DataRoom extends BaseContract {
   >;
 
   grantAccess: TypedContractMethod<
-    [roomId: BigNumberish, users: AddressLike[]],
+    [roomId: BigNumberish, users: AddressLike[], expiresAt: BigNumberish[]],
     [void],
     "nonpayable"
   >;
 
   grantAccessToAllFolders: TypedContractMethod<
-    [parentId: BigNumberish, user: AddressLike],
+    [parentId: BigNumberish, user: AddressLike, expiresAt: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -592,6 +642,9 @@ export interface DataRoom extends BaseContract {
     nameOrSignature: "NO_PARENT"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "PERMANENT"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "addDocuments"
   ): TypedContractMethod<
     [
@@ -641,8 +694,18 @@ export interface DataRoom extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "getExpiredMembers"
+  ): TypedContractMethod<[roomId: BigNumberish], [string[]], "view">;
+  getFunction(
     nameOrSignature: "getFolders"
   ): TypedContractMethod<[parentId: BigNumberish], [bigint[]], "view">;
+  getFunction(
+    nameOrSignature: "getMemberExpiry"
+  ): TypedContractMethod<
+    [roomId: BigNumberish, user: AddressLike],
+    [bigint],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "getMembers"
   ): TypedContractMethod<[roomId: BigNumberish], [string[]], "view">;
@@ -669,19 +732,26 @@ export interface DataRoom extends BaseContract {
     nameOrSignature: "getRoomKey"
   ): TypedContractMethod<[roomId: BigNumberish], [string], "view">;
   getFunction(
+    nameOrSignature: "getRoomWideExpiry"
+  ): TypedContractMethod<
+    [parentId: BigNumberish, user: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "getRoomWideGrantees"
   ): TypedContractMethod<[parentId: BigNumberish], [string[]], "view">;
   getFunction(
     nameOrSignature: "grantAccess"
   ): TypedContractMethod<
-    [roomId: BigNumberish, users: AddressLike[]],
+    [roomId: BigNumberish, users: AddressLike[], expiresAt: BigNumberish[]],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "grantAccessToAllFolders"
   ): TypedContractMethod<
-    [parentId: BigNumberish, user: AddressLike],
+    [parentId: BigNumberish, user: AddressLike, expiresAt: BigNumberish],
     [void],
     "nonpayable"
   >;

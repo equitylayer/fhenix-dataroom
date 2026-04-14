@@ -40,7 +40,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
             financialsId, _s1("bafyPL"), _s1("profit_loss_2025.xlsx"), _b1(_wk(3)), _b1('{"type":"financial"}')
         );
 
-        room.grantAccessToAllFolders(parentId, investorA);
+        room.grantAccessToAllFolders(parentId, investorA, type(uint256).max);
         vm.stopPrank();
 
         vm.startPrank(investorA);
@@ -112,8 +112,8 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         room.addDocuments(legalId, _s1("cidLegal"), _s1("legal.pdf"), _b1(_wk(1)), _b1(""));
         room.addDocuments(finId, _s1("cidFin"), _s1("financials.xlsx"), _b1(_wk(2)), _b1(""));
 
-        room.grantAccess(legalId, _addrs(investorA));
-        room.grantAccess(finId, _addrs(investorB));
+        room.grantAccess(legalId, _addrs(investorA), _permExp(1));
+        room.grantAccess(finId, _addrs(investorB), _permExp(1));
         vm.stopPrank();
 
         vm.prank(investorA);
@@ -151,7 +151,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         uint256 folderId = room.createFolder(parentId, "Docs");
 
         room.addDocuments(folderId, _s1("cidDoc"), _s1("term_sheet.pdf"), _b1(_wk(1)), _b1(""));
-        room.grantAccess(folderId, _addrs(investorA, investorB));
+        room.grantAccess(folderId, _addrs(investorA, investorB), _permExp(2));
         vm.stopPrank();
 
         vm.prank(investorA);
@@ -251,7 +251,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         room.getDocument(folderId, 1);
 
         vm.prank(board);
-        room.grantAccess(folderId, _addrs(investorA));
+        room.grantAccess(folderId, _addrs(investorA), _permExp(1));
 
         vm.startPrank(investorA);
         (cid,,,, wk,) = room.getDocument(folderId, 0);
@@ -281,7 +281,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         users[3] = auditor;
 
         for (uint256 i = 0; i < users.length; i++) {
-            room.grantAccessToAllFolders(parentId, users[i]);
+            room.grantAccessToAllFolders(parentId, users[i], type(uint256).max);
         }
 
         for (uint256 fId = f1; fId <= f3; fId++) {
@@ -298,8 +298,8 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
             assertEq(mc, 1);
         }
 
-        room.grantAccess(f1, _addrs(lawyer));
-        room.grantAccess(f2, _addrs(auditor));
+        room.grantAccess(f1, _addrs(lawyer), _permExp(1));
+        room.grantAccess(f2, _addrs(auditor), _permExp(1));
 
         (,, uint256 mc1,,,) = room.getRoom(f1);
         assertEq(mc1, 2);
@@ -368,7 +368,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         uint256 parentId = room.createRoom("Protected");
         uint256 folderId = room.createFolder(parentId, "Data");
 
-        room.grantAccess(folderId, _addrs(d01Operator));
+        room.grantAccess(folderId, _addrs(d01Operator), _permExp(1));
 
         vm.expectRevert(DataRoom.CannotRevokeOperator.selector);
         room.revokeAccess(folderId, _addrs(d01Operator));
@@ -394,7 +394,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         uint256 parentId = room.createRoom("ReadOnly");
         uint256 folderId = room.createFolder(parentId, "Data");
         room.addDocuments(folderId, _s1("cid"), _s1("file.pdf"), _b1(_wk(0)), _b1(""));
-        room.grantAccess(folderId, _addrs(investorA));
+        room.grantAccess(folderId, _addrs(investorA), _permExp(1));
         vm.stopPrank();
 
         vm.prank(investorA);
@@ -417,7 +417,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         room.removeDocument(folderId, 0);
 
         vm.expectRevert(DataRoom.OnlyAdmin.selector);
-        room.grantAccess(folderId, _addrs(investorB));
+        room.grantAccess(folderId, _addrs(investorB), _permExp(1));
 
         vm.expectRevert(DataRoom.OnlyAdmin.selector);
         room.revokeAccess(folderId, _addrs(board));
@@ -435,7 +435,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         room.updateDocumentMetadata(folderId, _u1(0), _b1(""));
 
         vm.expectRevert(DataRoom.OnlyAdmin.selector);
-        room.grantAccessToAllFolders(parentId, investorB);
+        room.grantAccessToAllFolders(parentId, investorB, type(uint256).max);
 
         vm.expectRevert(DataRoom.OnlyAdmin.selector);
         room.revokeAccessFromAllFolders(parentId, board);
@@ -473,7 +473,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         assertEq(room.getParentRoom(p1f2), p1);
         assertEq(room.getParentRoom(p2f1), p2);
 
-        room.grantAccessToAllFolders(p1, investorA);
+        room.grantAccessToAllFolders(p1, investorA, type(uint256).max);
         vm.stopPrank();
 
         vm.prank(investorA);
@@ -533,7 +533,7 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         uint256 folderId = room.createFolder(parentId, "Old Folder");
 
         room.addDocuments(folderId, _s1("cidX"), _s1("x.pdf"), _b1(_wk(0)), _b1(""));
-        room.grantAccess(folderId, _addrs(investorA));
+        room.grantAccess(folderId, _addrs(investorA), _permExp(1));
 
         room.renameRoom(parentId, "New Name");
         room.renameRoom(folderId, "New Folder");
@@ -560,12 +560,12 @@ contract DataRoomIntegrationTest is DataRoomBaseTest, CoFheTest {
         uint256 dealA = room.createRoom("Deal A");
         uint256 dealAFolder = room.createFolder(dealA, "Docs");
         room.addDocuments(dealAFolder, _s1("cidA"), _s1("a.pdf"), _b1(_wk(1)), _b1(""));
-        room.grantAccess(dealAFolder, _addrs(investorA));
+        room.grantAccess(dealAFolder, _addrs(investorA), _permExp(1));
 
         uint256 dealB = room.createRoom("Deal B");
         uint256 dealBFolder = room.createFolder(dealB, "Docs");
         room.addDocuments(dealBFolder, _s1("cidB"), _s1("b.pdf"), _b1(_wk(2)), _b1(""));
-        room.grantAccess(dealBFolder, _addrs(investorB));
+        room.grantAccess(dealBFolder, _addrs(investorB), _permExp(1));
         vm.stopPrank();
 
         vm.prank(investorA);

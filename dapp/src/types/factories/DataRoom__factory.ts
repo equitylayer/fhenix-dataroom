@@ -34,6 +34,19 @@ const _abi = [
   },
   {
     type: "function",
+    name: "PERMANENT",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "addDocuments",
     inputs: [
       {
@@ -196,6 +209,25 @@ const _abi = [
   },
   {
     type: "function",
+    name: "getExpiredMembers",
+    inputs: [
+      {
+        name: "roomId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "address[]",
+        internalType: "address[]",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getFolders",
     inputs: [
       {
@@ -209,6 +241,30 @@ const _abi = [
         name: "",
         type: "uint256[]",
         internalType: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getMemberExpiry",
+    inputs: [
+      {
+        name: "roomId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "user",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
@@ -316,6 +372,30 @@ const _abi = [
   },
   {
     type: "function",
+    name: "getRoomWideExpiry",
+    inputs: [
+      {
+        name: "parentId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "user",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getRoomWideGrantees",
     inputs: [
       {
@@ -347,6 +427,11 @@ const _abi = [
         type: "address[]",
         internalType: "address[]",
       },
+      {
+        name: "expiresAt",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
     ],
     outputs: [],
     stateMutability: "nonpayable",
@@ -364,6 +449,11 @@ const _abi = [
         name: "user",
         type: "address",
         internalType: "address",
+      },
+      {
+        name: "expiresAt",
+        type: "uint256",
+        internalType: "uint256",
       },
     ],
     outputs: [],

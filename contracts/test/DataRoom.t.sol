@@ -298,6 +298,128 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     }
 
     // ═════════════════════════════════════════════════════════
+    //  Expiring access
+    // ═════════════════════════════════════════════════════════
+
+    function test_expiry_hasAccessRespectsDeadline() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.prank(board);
+        room.grantAccess(FOLDER, _addrs(member), _u1(deadline));
+
+        vm.prank(member);
+        assertTrue(room.hasAccess(FOLDER));
+
+        vm.warp(deadline);
+        vm.prank(member);
+        assertFalse(room.hasAccess(FOLDER));
+    }
+
+    function test_expiry_getRoomKeyRevertsAfterExpiry() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.prank(board);
+        room.grantAccess(FOLDER, _addrs(member), _u1(deadline));
+
+        vm.warp(deadline);
+        vm.prank(member);
+        vm.expectRevert(DataRoom.Unauthorized.selector);
+        room.getRoomKey(FOLDER);
+    }
+
+    function test_expiry_getDocumentRevertsAfterExpiry() public {
+        // Grant member expiring access; add one encrypted doc
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.startPrank(board);
+        room.grantAccess(FOLDER, _addrs(member), _u1(deadline));
+        room.addDocuments(FOLDER, _s1("cid1"), _s1("a"), _b1(_wk(1)), _b1(""));
+        vm.stopPrank();
+
+        vm.warp(deadline);
+        vm.prank(member);
+        vm.expectRevert(DataRoom.Unauthorized.selector);
+        room.getDocument(FOLDER, 0);
+    }
+
+    function test_expiry_ownerBypassesExpiry() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.prank(board);
+        room.grantAccess(FOLDER, _addrs(member), _u1(deadline));
+
+        vm.warp(deadline);
+        vm.prank(board);
+        assertTrue(room.hasAccess(FOLDER));
+    }
+
+    function test_expiry_regrantExtendsDeadline() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.prank(board);
+        room.grantAccess(FOLDER, _addrs(member), _u1(deadline));
+
+        vm.warp(deadline);
+        vm.prank(member);
+        assertFalse(room.hasAccess(FOLDER));
+
+        uint256 newDeadline = block.timestamp + 2 hours;
+        vm.prank(board);
+        room.grantAccess(FOLDER, _addrs(member), _u1(newDeadline));
+
+        vm.prank(member);
+        assertTrue(room.hasAccess(FOLDER));
+    }
+
+    function test_expiry_getExpiredMembersFlagsExpired() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.startPrank(board);
+        room.grantAccess(FOLDER, _addrs(member), _u1(deadline));
+        room.grantAccess(FOLDER, _addrs(nonBoard), _u1(type(uint256).max));
+        vm.stopPrank();
+
+        vm.warp(deadline);
+        vm.prank(board);
+        address[] memory expired = room.getExpiredMembers(FOLDER);
+        assertEq(expired.length, 1);
+        assertEq(expired[0], member);
+    }
+
+    function test_expiry_rekeyDropsExpiredMembers() public {
+        // member gets expiring access; after rekey they should not have the new key
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.prank(board);
+        room.grantAccess(FOLDER, _addrs(member), _u1(deadline));
+
+        bytes32 oldKey = _keyHandle(member, FOLDER);
+        assertTrue(oldKey != bytes32(0));
+
+        vm.warp(deadline);
+        vm.prank(board);
+        room.rekeyRoom(FOLDER);
+
+        // member is still "a member" by the packed array
+        // but the NEW key handle they see should be different from the old one, AND hasAccess says no
+        vm.prank(member);
+        assertFalse(room.hasAccess(FOLDER));
+    }
+
+    function test_expiry_roomWideInheritsExpiryOnNewFolder() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.startPrank(board);
+        room.grantAccessToAllFolders(PARENT, member, deadline);
+        uint256 newFolder = room.createFolder(PARENT, "Late");
+        vm.stopPrank();
+
+        assertEq(room.getMemberExpiry(newFolder, member), deadline);
+
+        vm.warp(deadline);
+        vm.prank(member);
+        assertFalse(room.hasAccess(newFolder));
+    }
+
+    function test_expiry_grantAccess_lengthMismatch() public {
+        vm.prank(board);
+        vm.expectRevert(DataRoom.LengthMismatch.selector);
+        room.grantAccess(FOLDER, _addrs(member, nonBoard), _u1(type(uint256).max));
+    }
+
+    // ═════════════════════════════════════════════════════════
     //  grantAccess()
     // ═════════════════════════════════════════════════════════
 
@@ -305,7 +427,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         vm.expectEmit(true, false, false, true);
         emit DataRoom.MembershipChanged(FOLDER);
         vm.prank(board);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
 
         vm.prank(member);
         assertTrue(room.hasAccess(FOLDER));
@@ -316,7 +438,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_grantAccess_grantsMultiple() public {
         vm.prank(board);
-        room.grantAccess(FOLDER, _addrs(member, nonBoard));
+        room.grantAccess(FOLDER, _addrs(member, nonBoard), _permExp(2));
 
         vm.prank(board);
         assertEq(room.getMembers(FOLDER).length, 3);
@@ -324,16 +446,16 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_grantAccess_skipsDuplicate() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(member));
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         assertEq(room.getMembers(FOLDER).length, 2);
         vm.stopPrank();
     }
 
     function test_grantAccess_mixedBatchSkipsDuplicate() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(member));
-        room.grantAccess(FOLDER, _addrs(nonBoard, member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
+        room.grantAccess(FOLDER, _addrs(nonBoard, member), _permExp(2));
         assertEq(room.getMembers(FOLDER).length, 3);
         vm.stopPrank();
     }
@@ -341,30 +463,30 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_grantAccess_rejectsNonAdmin() public {
         vm.expectRevert(DataRoom.OnlyAdmin.selector);
         vm.prank(member);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
     }
 
     function test_grantAccess_rejectsOnParentRoom() public {
         vm.expectRevert(DataRoom.IsParentRoom.selector);
         vm.prank(board);
-        room.grantAccess(PARENT, _addrs(member));
+        room.grantAccess(PARENT, _addrs(member), _permExp(1));
     }
 
     function test_grantAccess_rejectsAddressZero() public {
         vm.expectRevert(DataRoom.InvalidAddress.selector);
         vm.prank(board);
-        room.grantAccess(FOLDER, _addrs(address(0)));
+        room.grantAccess(FOLDER, _addrs(address(0)), _permExp(1));
     }
 
     function test_grantAccess_reGrantAfterRevoke() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         assertEq(room.getMembers(FOLDER).length, 2);
 
         room.revokeAccess(FOLDER, _addrs(member));
         assertEq(room.getMembers(FOLDER).length, 1);
 
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         assertEq(room.getMembers(FOLDER).length, 2);
         (,, uint256 memberCount,,,) = room.getRoom(FOLDER);
         assertEq(memberCount, 2);
@@ -380,7 +502,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_grantAccess_multipleRevokeGrantCycles() public {
         for (uint256 cycle = 0; cycle < 3; cycle++) {
             vm.prank(board);
-            room.grantAccess(FOLDER, _addrs(member));
+            room.grantAccess(FOLDER, _addrs(member), _permExp(1));
             vm.prank(board);
             assertEq(room.getMembers(FOLDER).length, 2);
             vm.prank(member);
@@ -401,7 +523,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_revokeAccess_revokesMember() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         room.revokeAccess(FOLDER, _addrs(member));
         vm.stopPrank();
 
@@ -412,7 +534,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_revokeAccess_flagDecryptsToFalse() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         room.revokeAccess(FOLDER, _addrs(member));
         vm.stopPrank();
 
@@ -428,7 +550,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_revokeAccess_mixedBatchRollsBack() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         vm.expectRevert(DataRoom.NotMember.selector);
         room.revokeAccess(FOLDER, _addrs(member, nonBoard));
         assertEq(room.getMembers(FOLDER).length, 2);
@@ -443,7 +565,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_revokeAccess_rejectsOperator() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(d01Operator));
+        room.grantAccess(FOLDER, _addrs(d01Operator), _permExp(1));
         vm.expectRevert(DataRoom.CannotRevokeOperator.selector);
         room.revokeAccess(FOLDER, _addrs(d01Operator));
         vm.stopPrank();
@@ -451,7 +573,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_revokeAndRekey_revokesAndRotatesKey() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         uint256 vBefore = room.roomKeyVersion(FOLDER);
         room.revokeAndRekey(FOLDER, _addrs(member));
         vm.stopPrank();
@@ -463,7 +585,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_revokeAndRekey_rejectsOperator() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(d01Operator));
+        room.grantAccess(FOLDER, _addrs(d01Operator), _permExp(1));
         vm.expectRevert(DataRoom.CannotRevokeOperator.selector);
         room.revokeAndRekey(FOLDER, _addrs(d01Operator));
         vm.stopPrank();
@@ -477,7 +599,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         vm.startPrank(board);
         room.createFolder(PARENT, "Financials");
         room.createFolder(PARENT, "IP");
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
 
         for (uint256 fId = 1; fId <= 3; fId++) {
             assertEq(room.getMembers(fId).length, 2);
@@ -488,7 +610,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_grantAccessToAllFolders_memberCanAccessKeys() public {
         vm.startPrank(board);
         room.createFolder(PARENT, "Financials");
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
         vm.stopPrank();
 
         for (uint256 fId = 1; fId <= 2; fId++) {
@@ -500,8 +622,8 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_grantAccessToAllFolders_isIdempotent() public {
         vm.startPrank(board);
         room.createFolder(PARENT, "Financials");
-        room.grantAccess(FOLDER, _addrs(member));
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
 
         for (uint256 fId = 1; fId <= 2; fId++) {
             assertEq(room.getMembers(fId).length, 2);
@@ -511,8 +633,8 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_grantAccessToAllFolders_repeatedCallsNoDuplicates() public {
         vm.startPrank(board);
-        room.grantAccessToAllFolders(PARENT, member);
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
         assertEq(room.getMembers(FOLDER).length, 2);
         vm.stopPrank();
     }
@@ -524,11 +646,11 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         room.createFolder(PARENT, "Financials");
 
         // Per-folder grant should NOT appear in room-wide grantees
-        room.grantAccess(FOLDER, _addrs(otherMember));
+        room.grantAccess(FOLDER, _addrs(otherMember), _permExp(1));
         assertEq(room.getRoomWideGrantees(PARENT).length, 0);
 
         // Room-wide grant does appear
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
         address[] memory roomWide = room.getRoomWideGrantees(PARENT);
         assertEq(roomWide.length, 1);
         assertEq(roomWide[0], member);
@@ -545,7 +667,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_grantAccessToAllFolders_newFoldersInheritGrant() public {
         vm.startPrank(board);
         // Grant room-wide BEFORE any additional folder exists
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
 
         // Existing FOLDER has the member
         assertEq(room.getMembers(FOLDER).length, 2);
@@ -570,9 +692,9 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_grantAccessToAllFolders_reGrantAfterRevokeAll() public {
         vm.startPrank(board);
         room.createFolder(PARENT, "Financials");
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
         room.revokeAccessFromAllFolders(PARENT, member);
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
 
         for (uint256 fId = 1; fId <= 2; fId++) {
             assertEq(room.getMembers(fId).length, 2);
@@ -590,19 +712,19 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_grantAccessToAllFolders_rejectsNonParent() public {
         vm.expectRevert(DataRoom.NotParentRoom.selector);
         vm.prank(board);
-        room.grantAccessToAllFolders(FOLDER, member);
+        room.grantAccessToAllFolders(FOLDER, member, type(uint256).max);
     }
 
     function test_grantAccessToAllFolders_rejectsNonAdmin() public {
         vm.expectRevert(DataRoom.OnlyAdmin.selector);
         vm.prank(member);
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
     }
 
     function test_grantAccessToAllFolders_rejectsAddressZero() public {
         vm.expectRevert(DataRoom.InvalidAddress.selector);
         vm.prank(board);
-        room.grantAccessToAllFolders(PARENT, address(0));
+        room.grantAccessToAllFolders(PARENT, address(0), type(uint256).max);
     }
 
     // ═════════════════════════════════════════════════════════
@@ -612,7 +734,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_revokeAccessFromAllFolders_revokesAll() public {
         vm.startPrank(board);
         room.createFolder(PARENT, "Financials");
-        room.grantAccessToAllFolders(PARENT, member);
+        room.grantAccessToAllFolders(PARENT, member, type(uint256).max);
         room.revokeAccessFromAllFolders(PARENT, member);
 
         for (uint256 fId = 1; fId <= 2; fId++) {
@@ -624,7 +746,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
     function test_revokeAccessFromAllFolders_isIdempotent() public {
         vm.startPrank(board);
         room.createFolder(PARENT, "Financials");
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         room.revokeAccessFromAllFolders(PARENT, member);
         assertEq(room.getMembers(FOLDER).length, 1);
         assertEq(room.getMembers(2).length, 1);
@@ -645,7 +767,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_revokeAccessFromAllFolders_rejectsOperator() public {
         vm.startPrank(board);
-        room.grantAccessToAllFolders(PARENT, d01Operator);
+        room.grantAccessToAllFolders(PARENT, d01Operator, type(uint256).max);
         vm.expectRevert(DataRoom.CannotRevokeOperator.selector);
         room.revokeAccessFromAllFolders(PARENT, d01Operator);
         vm.stopPrank();
@@ -669,7 +791,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_rekeyRoom_remainingMemberCanAccess() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         room.rekeyRoom(FOLDER);
         vm.stopPrank();
 
@@ -679,7 +801,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
 
     function test_rekeyRoom_revokedMemberLosesAccess() public {
         vm.startPrank(board);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         vm.stopPrank();
 
         vm.prank(member);
@@ -718,7 +840,7 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         assertFalse(room.hasAccess(FOLDER));
 
         vm.prank(board);
-        room.grantAccess(FOLDER, _addrs(member));
+        room.grantAccess(FOLDER, _addrs(member), _permExp(1));
         vm.prank(member);
         assertTrue(room.hasAccess(FOLDER));
 

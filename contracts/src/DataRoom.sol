@@ -46,6 +46,7 @@ contract DataRoom {
 
     uint256 public constant NO_PARENT = type(uint256).max;
     uint256 public constant MAX_BATCH_SIZE = 100;
+    uint256 public constant PERMANENT = type(uint256).max;
 
     address public admin;
     address public operator;
@@ -65,6 +66,8 @@ contract DataRoom {
     /// @dev Reverse lookup: member address → slot index in _members.
     mapping(uint256 => mapping(address => uint256)) private _memberIndex;
     mapping(uint256 => mapping(address => bool)) private _isMember;
+    /// @dev Per-member expiry. `PERMANENT` = never expires. 0 only for non-members.
+    mapping(uint256 => mapping(address => uint256)) private _memberExpiry;
 
     /// @dev parentId => child index => roomId
     mapping(uint256 => mapping(uint256 => uint256)) private _children;
@@ -72,6 +75,8 @@ contract DataRoom {
     /// @dev parentId => set of addresses that have been granted access at the room level.
     ///      Distinct from per-folder membership (which is union). Tracks intent, not derived.
     mapping(uint256 => EnumerableSet.AddressSet) private _roomWideAccess;
+    /// @dev parentId => user => expiry for room-wide grant. `PERMANENT` = never expires.
+    mapping(uint256 => mapping(address => uint256)) private _roomWideExpiry;
 
     // Public Events
     event RoomCreated(uint256 indexed roomId, address indexed creator);
@@ -182,13 +187,11 @@ contract DataRoom {
         FHE.allowThis(key);
         FHE.allow(key, operator);
 
-        _grantUser(roomId, msg.sender);
+        _grantUser(roomId, msg.sender, PERMANENT);
 
-        // Propagate existing room-wide grants to the new folder, so room-wide
-        // access includes folders created after the grant.
         address[] memory roomWide = _roomWideAccess[parentId].values();
         for (uint256 i; i < roomWide.length;) {
-            _grantUser(roomId, roomWide[i]);
+            _grantUser(roomId, roomWide[i], _roomWideExpiry[parentId][roomWide[i]]);
             unchecked {
                 ++i;
             }
@@ -298,19 +301,21 @@ contract DataRoom {
 
     // ─── Access Group Management
 
-    /// @notice Grant access to one or more users on a folder. Skips already-members.
-    /// @param roomId The folder to grant access to.
-    /// @param users    Addresses to grant access.
-    function grantAccess(uint256 roomId, address[] calldata users)
+    /// @notice Grant access to one or more users on a folder. For already-members, updates expiry.
+    /// @param roomId     The folder to grant access to.
+    /// @param users      Addresses to grant access.
+    /// @param expiresAt  Expiry per user. Use `PERMANENT` for no expiry.
+    function grantAccess(uint256 roomId, address[] calldata users, uint256[] calldata expiresAt)
         external
         roomExists(roomId)
         onlyRoomOwner(roomId)
         notParentRoom(roomId)
     {
+        if (users.length != expiresAt.length) revert LengthMismatch();
         if (users.length > MAX_BATCH_SIZE) revert BatchTooLarge();
         for (uint256 i = 0; i < users.length;) {
             if (users[i] == address(0)) revert InvalidAddress();
-            _grantUser(roomId, users[i]);
+            _grantUser(roomId, users[i], expiresAt[i]);
             unchecked {
                 ++i;
             }
@@ -345,18 +350,24 @@ contract DataRoom {
     }
 
     /// @notice Grant a user access to all folders under a parent room.
-    /// @param parentId The parent room ID.
-    /// @param user Address of the user to grant access.
-    function grantAccessToAllFolders(uint256 parentId, address user) external roomExists(parentId) onlyRoomOwner(parentId) {
+    /// @param parentId   The parent room ID.
+    /// @param user       Address of the user to grant access.
+    /// @param expiresAt  Expiry timestamp. Use `PERMANENT` for no expiry.
+    function grantAccessToAllFolders(uint256 parentId, address user, uint256 expiresAt)
+        external
+        roomExists(parentId)
+        onlyRoomOwner(parentId)
+    {
         if (user == address(0)) revert InvalidAddress();
         Room storage parent = rooms[parentId];
         if (!parent.isParent) revert NotParentRoom();
 
         _roomWideAccess[parentId].add(user);
+        _roomWideExpiry[parentId][user] = expiresAt;
 
         for (uint256 i = 0; i < parent.childCount;) {
             uint256 roomId = _children[parentId][i];
-            _grantUser(roomId, user);
+            _grantUser(roomId, user, expiresAt);
             emit MembershipChanged(roomId);
             unchecked {
                 ++i;
@@ -373,6 +384,7 @@ contract DataRoom {
         if (!parent.isParent) revert NotParentRoom();
 
         _roomWideAccess[parentId].remove(user);
+        delete _roomWideExpiry[parentId][user];
 
         for (uint256 i = 0; i < parent.childCount;) {
             uint256 roomId = _children[parentId][i];
@@ -396,16 +408,29 @@ contract DataRoom {
 
     // ─── Internal Helpers
 
-    /// @dev Grant a single user access to a folder. Skips if already a member.
-    function _grantUser(uint256 roomId, address user) internal {
-        if (_isMember[roomId][user]) return;
+    /// @dev Grant a single user access to a folder. If already a member, updates expiry in place.
+    function _grantUser(uint256 roomId, address user, uint256 expiresAt) internal {
+        if (_isMember[roomId][user]) {
+            _memberExpiry[roomId][user] = expiresAt;
+            return;
+        }
 
         uint256 slot = rooms[roomId].memberCount++;
         _members[roomId][slot] = user;
         _memberIndex[roomId][user] = slot;
         _isMember[roomId][user] = true;
+        _memberExpiry[roomId][user] = expiresAt;
 
         FHE.allow(_roomKey[roomId], user);
+    }
+
+    /// @dev `account` has non-expired access to `roomId`. Owner and operator bypass expiry.
+    function _hasAccess(uint256 roomId, address account) internal view returns (bool) {
+        if (account == rooms[roomId].owner || account == operator) return true;
+        if (!_isMember[roomId][account]) return false;
+        uint256 exp = _memberExpiry[roomId][account];
+        if (exp == PERMANENT) return true;
+        return block.timestamp < exp;
     }
 
     function _storeDocument(uint256 roomId, string calldata cid, string calldata name, bytes calldata wrappedKey, bytes calldata metadata)
@@ -462,10 +487,17 @@ contract DataRoom {
         FHE.allowThis(newKey);
         FHE.allow(newKey, operator);
 
-        // Only iterates active members (packed array)
+        // Re-allow every active, non-expired member on the new key. Expired members keep
+        // their `_isMember` flag (visible in member list until owner clears them via
+        // revokeAndRekey), but do not get a fresh FHE permit.
         uint256 count = rooms[roomId].memberCount;
+        uint256 nowTs = block.timestamp;
         for (uint256 i = 0; i < count;) {
-            FHE.allow(newKey, _members[roomId][i]);
+            address member = _members[roomId][i];
+            uint256 exp = _memberExpiry[roomId][member];
+            if (exp == PERMANENT || nowTs < exp) {
+                FHE.allow(newKey, member);
+            }
             unchecked {
                 ++i;
             }
@@ -476,18 +508,16 @@ contract DataRoom {
 
     // Views
 
-    /// @notice Check if the caller has access to a folder
+    /// @notice Check if the caller currently has access to a folder (respects expiry).
     /// @param roomId The folder to check access for.
     function hasAccess(uint256 roomId) external view roomExists(roomId) returns (bool) {
-        return _isMember[roomId][msg.sender];
+        return _hasAccess(roomId, msg.sender);
     }
 
     /// @notice Get the encrypted folder key handle. Only decryptable if granted FHE access.
     /// @param roomId The folder to get the key for.
     function getRoomKey(uint256 roomId) external view roomExists(roomId) notParentRoom(roomId) returns (euint128) {
-        if (msg.sender != rooms[roomId].owner && msg.sender != operator && !_isMember[roomId][msg.sender]) {
-            revert Unauthorized();
-        }
+        if (!_hasAccess(roomId, msg.sender)) revert Unauthorized();
         return _roomKey[roomId];
     }
 
@@ -512,9 +542,7 @@ contract DataRoom {
         Document storage doc = _documents[roomId][docIndex];
         if (doc.deleted) revert DocumentDeleted();
         if (doc.wrappedKey.length > 0) {
-            if (msg.sender != rooms[roomId].owner && msg.sender != operator && !_isMember[roomId][msg.sender]) {
-                revert Unauthorized();
-            }
+            if (!_hasAccess(roomId, msg.sender)) revert Unauthorized();
         }
         return (doc.cid, doc.name, doc.createdAt, documentKeyVersion[roomId][docIndex], doc.wrappedKey, doc.metadata);
     }
@@ -589,5 +617,47 @@ contract DataRoom {
         if (msg.sender != rooms[parentId].owner && msg.sender != operator) revert Unauthorized();
         if (!rooms[parentId].isParent) revert NotParentRoom();
         return _roomWideAccess[parentId].values();
+    }
+
+    /// @notice Expiry timestamp for a member's access to a folder. Returns 0 for non-members,
+    ///         `PERMANENT` for no-expiry grants, otherwise a unix timestamp.
+    function getMemberExpiry(uint256 roomId, address user) external view roomExists(roomId) returns (uint256) {
+        if (!_isMember[roomId][user]) return 0;
+        return _memberExpiry[roomId][user];
+    }
+
+    /// @notice Expiry timestamp for a room-wide grant. Returns 0 if not a room-wide grantee.
+    function getRoomWideExpiry(uint256 parentId, address user) external view roomExists(parentId) returns (uint256) {
+        if (!_roomWideAccess[parentId].contains(user)) return 0;
+        return _roomWideExpiry[parentId][user];
+    }
+
+    /// @notice Members whose access has expired. Owner feeds this into `revokeAndRekey`
+    ///         to hard-revoke (remove FHE permits on a fresh folder key).
+    function getExpiredMembers(uint256 roomId) external view roomExists(roomId) returns (address[] memory) {
+        if (msg.sender != rooms[roomId].owner && msg.sender != operator) revert Unauthorized();
+
+        uint256 count = rooms[roomId].memberCount;
+        uint256 nowTs = block.timestamp;
+        address[] memory tmp = new address[](count);
+        uint256 n;
+        for (uint256 i = 0; i < count;) {
+            address m = _members[roomId][i];
+            uint256 exp = _memberExpiry[roomId][m];
+            if (exp != PERMANENT && nowTs >= exp) {
+                tmp[n++] = m;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+        address[] memory result = new address[](n);
+        for (uint256 i = 0; i < n;) {
+            result[i] = tmp[i];
+            unchecked {
+                ++i;
+            }
+        }
+        return result;
     }
 }

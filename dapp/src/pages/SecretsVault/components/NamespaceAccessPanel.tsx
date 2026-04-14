@@ -1,5 +1,5 @@
-import { GrantAccessForm } from "@/components/secretsvault/GrantAccessForm";
-import { GranteeList } from "@/components/secretsvault/GranteeList";
+import { GrantAccessForm } from "@/components/access/GrantAccessForm";
+import { GranteeList } from "@/components/access/GranteeList";
 import {
 	useGrantNamespaceAccess,
 	useNamespaceGrantees,

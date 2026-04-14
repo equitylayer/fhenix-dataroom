@@ -48,6 +48,7 @@ export function useCommitAccessChanges(dataRoomAddress: HexAddress | undefined) 
 			usersToAdd: string[],
 			documentCount: number,
 			oldRoomKeyHex: string,
+			addExpiries?: bigint[],
 		) => {
 			if (!signerPromise || !dataRoomAddress || !walletClient) return;
 			try {
@@ -91,7 +92,13 @@ export function useCommitAccessChanges(dataRoomAddress: HexAddress | undefined) 
 
 				if (usersToAdd.length > 0) {
 					setProgress({ phase: CommitPhase.Granting, current: 0, total: 0 });
-					const grantTx = await contract.grantAccess(folderId, usersToAdd);
+					// Default to PERMANENT when caller didn't specify per-user expiry.
+					const PERMANENT = (1n << 256n) - 1n;
+					const expiries =
+						addExpiries && addExpiries.length === usersToAdd.length
+							? addExpiries
+							: usersToAdd.map(() => PERMANENT);
+					const grantTx = await contract.grantAccess(folderId, usersToAdd, expiries);
 					await grantTx.wait();
 				}
 
