@@ -25,7 +25,15 @@ import {
 	useRoom,
 	useRoomMembers,
 } from "@/hooks/dataroom";
+import { useExpiredMembers } from "@/hooks/dataroom/useExpiredMembers";
 import type { HexAddress } from "@/lib/contracts";
+
+const PERMANENT = (1n << 256n) - 1n;
+
+interface PendingAdd {
+	address: string;
+	expiresAt: bigint;
+}
 
 interface Props {
 	dataRoomAddress: HexAddress;
@@ -41,22 +49,25 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 
 	const { data: folder } = useRoom(dataRoomAddress, folderId);
 	const { data: members } = useRoomMembers(dataRoomAddress, folderId, isOwner);
+	const { data: expiredMembers } = useExpiredMembers(dataRoomAddress, folderId, isOwner);
 	const { roomKeyHex, showPrompt, requestDecrypt } = useDecryptFolder(dataRoomAddress, folderId);
 	const { commit, progress: commitProgress, reset: resetCommit } = useCommitAccessChanges(dataRoomAddress);
 	const { rekeyAndRewrap, progress: rekeyProgress } = useRekeyAndRewrap(dataRoomAddress);
 
-	const [pendingAdds, setPendingAdds] = useState<string[]>([]);
+	const [pendingAdds, setPendingAdds] = useState<PendingAdd[]>([]);
 	const [pendingRemoves, setPendingRemoves] = useState<Set<string>>(new Set());
-	const [inputValue, setInputValue] = useState("");
+	const [inputAddress, setInputAddress] = useState("");
+	const [inputPermanent, setInputPermanent] = useState(true);
+	const [inputExpiresAt, setInputExpiresAt] = useState("");
 	const [inputError, setInputError] = useState<string | null>(null);
 	const [showRekeyWarning, setShowRekeyWarning] = useState(false);
 
 	const memberList = (members as string[] | undefined) ?? [];
 	const ownerAddr = folder?.owner?.toLowerCase();
 	const documentCount = folder ? Number(folder.documentCount) : 0;
+	const expiredList = (expiredMembers as string[] | undefined) ?? [];
 
-	// Split members into "direct" (granted to this folder specifically, including owner)
-	// vs "inherited" (has room-wide access — member of every folder).
+	// Split members into "direct" vs "inherited" (room-wide).
 	const directMembers: string[] = [];
 	const inheritedMembers: string[] = [];
 	for (const m of memberList) {
@@ -76,19 +87,31 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 		rekeyProgress.phase === RekeyPhase.Rewrapping ||
 		rekeyProgress.phase === RekeyPhase.Updating;
 
+	const resolveExpiry = (): bigint | null => {
+		if (inputPermanent) return PERMANENT;
+		if (!inputExpiresAt) return null;
+		const ms = new Date(inputExpiresAt).getTime();
+		if (Number.isNaN(ms)) return null;
+		return BigInt(Math.floor(ms / 1000));
+	};
+
 	const handleAddChip = () => {
-		const addr = inputValue.trim();
+		const addr = inputAddress.trim();
 		if (!addr) return;
 		if (!isAddress(addr)) return setInputError("Not a valid address");
 		const lower = addr.toLowerCase();
-		if (pendingAdds.some((a) => a.toLowerCase() === lower)) return setInputError("Already pending");
+		if (pendingAdds.some((p) => p.address.toLowerCase() === lower)) return setInputError("Already pending");
 		if (memberList.some((m) => m.toLowerCase() === lower)) return setInputError("Already a member");
+		const expiry = resolveExpiry();
+		if (expiry === null) return setInputError("Pick an expiry date or choose Permanent");
 		setInputError(null);
-		setPendingAdds((prev) => [...prev, addr]);
-		setInputValue("");
+		setPendingAdds((prev) => [...prev, { address: addr, expiresAt: expiry }]);
+		setInputAddress("");
+		setInputExpiresAt("");
 	};
 
-	const handleRemoveChip = (addr: string) => setPendingAdds((prev) => prev.filter((a) => a !== addr));
+	const handleRemoveChip = (addr: string) =>
+		setPendingAdds((prev) => prev.filter((p) => p.address !== addr));
 
 	const handleToggleRemove = (member: string) =>
 		setPendingRemoves((prev) => {
@@ -104,9 +127,26 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 			return;
 		}
 		resetCommit();
-		await commit(folderId, Array.from(pendingRemoves), pendingAdds, documentCount, roomKeyHex);
+		await commit(
+			folderId,
+			Array.from(pendingRemoves),
+			pendingAdds.map((p) => p.address),
+			documentCount,
+			roomKeyHex,
+			pendingAdds.map((p) => p.expiresAt),
+		);
 		setPendingAdds([]);
 		setPendingRemoves(new Set());
+	};
+
+	const handleClearExpired = async () => {
+		if (!roomKeyHex) {
+			requestDecrypt();
+			return;
+		}
+		if (expiredList.length === 0) return;
+		resetCommit();
+		await commit(folderId, expiredList, [], documentCount, roomKeyHex);
 	};
 
 	const handleRotateKey = async () => {
@@ -120,6 +160,11 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 
 	const isFolderOwner = (m: string) => !!ownerAddr && m.toLowerCase() === ownerAddr;
 
+	const formatChipExpiry = (exp: bigint) => {
+		if (exp === PERMANENT) return "permanent";
+		return new Date(Number(exp) * 1000).toLocaleDateString();
+	};
+
 	return (
 		<div>
 			<button
@@ -132,6 +177,9 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 					<span className="text-xs text-muted-foreground shrink-0">
 						{directMembers.length} direct
 						{inheritedMembers.length > 0 && ` · +${inheritedMembers.length} inherited`}
+						{expiredList.length > 0 && (
+							<span className="text-destructive"> · {expiredList.length} expired</span>
+						)}
 					</span>
 				</span>
 				{expanded ? (
@@ -149,17 +197,35 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 						</p>
 					)}
 
+					{expiredList.length > 0 && (
+						<div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 flex items-center justify-between gap-2 text-xs">
+							<span className="text-destructive">
+								{expiredList.length} member{expiredList.length === 1 ? "" : "s"} expired — rotate the
+								folder key to hard-revoke.
+							</span>
+							<Button
+								size="xs"
+								variant="dangerOutline"
+								onClick={handleClearExpired}
+								disabled={isCommitBusy || isRekeyBusy}
+							>
+								Clear expired
+							</Button>
+						</div>
+					)}
+
 					{pendingAdds.length > 0 && (
 						<div className="flex flex-wrap gap-1.5">
-							{pendingAdds.map((addr) => (
+							{pendingAdds.map((p) => (
 								<span
-									key={addr}
+									key={p.address}
 									className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-mono"
 								>
-									{addr.slice(0, 6)}…{addr.slice(-4)}
+									{p.address.slice(0, 6)}…{p.address.slice(-4)}
+									<span className="opacity-70">· {formatChipExpiry(p.expiresAt)}</span>
 									<button
 										type="button"
-										onClick={() => handleRemoveChip(addr)}
+										onClick={() => handleRemoveChip(p.address)}
 										className="btn-reset hover:text-destructive"
 									>
 										<X className="h-3 w-3" />
@@ -172,9 +238,9 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 					<div className="flex gap-2">
 						<Input
 							type="text"
-							value={inputValue}
+							value={inputAddress}
 							onChange={(e) => {
-								setInputValue(e.target.value);
+								setInputAddress(e.target.value);
 								if (inputError) setInputError(null);
 							}}
 							placeholder="0x..."
@@ -189,6 +255,26 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 						</Button>
 					</div>
 
+					<div className="flex items-center gap-3 text-xs text-muted-foreground">
+						<label className="flex items-center gap-2 cursor-pointer">
+							<input
+								type="checkbox"
+								checked={inputPermanent}
+								onChange={(e) => setInputPermanent(e.target.checked)}
+								className="accent-primary"
+							/>
+							Permanent
+						</label>
+						{!inputPermanent && (
+							<Input
+								type="datetime-local"
+								value={inputExpiresAt}
+								onChange={(e) => setInputExpiresAt(e.target.value)}
+								className="flex-1"
+							/>
+						)}
+					</div>
+
 					{inputError && <p className="text-destructive text-xs">{inputError}</p>}
 
 					{directMembers.length === 0 && inheritedMembers.length === 0 ? (
@@ -199,6 +285,7 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 								{directMembers.map((m) => {
 									const markedForRemoval = pendingRemoves.has(m);
 									const ownerTag = isFolderOwner(m);
+									const isExpired = expiredList.some((e) => e.toLowerCase() === m.toLowerCase());
 									return (
 										<div
 											key={m}
@@ -213,6 +300,11 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 												{ownerTag && (
 													<span className="text-primary text-[0.65rem] uppercase tracking-wider">
 														owner
+													</span>
+												)}
+												{isExpired && !ownerTag && (
+													<span className="text-destructive text-[0.65rem] uppercase tracking-wider">
+														expired
 													</span>
 												)}
 												{markedForRemoval && (

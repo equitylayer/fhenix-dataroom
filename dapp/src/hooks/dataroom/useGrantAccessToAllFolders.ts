@@ -17,13 +17,13 @@ export function useGrantAccessToAllFolders(dataRoomAddress: HexAddress | undefin
 	const [error, setError] = useState<Error | null>(null);
 
 	const grantAccessToAllFolders = useCallback(
-		async (parentId: bigint, user: string) => {
+		async (parentId: bigint, user: string, expiresAt: bigint) => {
 			if (!signerPromise || !dataRoomAddress) return;
 			setIsPending(true);
 			setError(null);
 			try {
 				const contract = await getDataRoomSignerContract(dataRoomAddress, signerPromise);
-				const tx = await contract.grantAccessToAllFolders(parentId, user);
+				const tx = await contract.grantAccessToAllFolders(parentId, user, expiresAt);
 				setIsPending(false);
 				setIsConfirming(true);
 				await tx.wait();

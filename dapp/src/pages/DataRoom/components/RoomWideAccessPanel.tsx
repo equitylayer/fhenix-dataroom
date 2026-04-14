@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AlertTriangle, Loader2, UserMinus } from "lucide-react";
-import { isAddress } from "viem";
+import { GrantAccessForm } from "@/components/access/GrantAccessForm";
 import {
 	useGrantAccessToAllFolders,
 	useRevokeAccessFromAllFolders,
@@ -8,8 +8,10 @@ import {
 } from "@/hooks/dataroom";
 import { Button } from "@/components/ui/button";
 import { CopyableAddress } from "@/components/Button/CopyableAddress";
-import { Input } from "@/components/ui/input";
+import { formatExpiry } from "@/lib/format";
 import type { HexAddress } from "@/lib/contracts";
+
+const PERMANENT = (1n << 256n) - 1n;
 
 interface Props {
 	dataRoomAddress: HexAddress;
@@ -31,26 +33,16 @@ export function RoomWideAccessPanel({ dataRoomAddress, roomId }: Props) {
 		error: revokeError,
 	} = useRevokeAccessFromAllFolders(dataRoomAddress);
 
-	const [address, setAddress] = useState("");
-	const [validationError, setValidationError] = useState<string | null>(null);
 	const [revokingAddr, setRevokingAddr] = useState<string | null>(null);
 
 	const isBusy = isGranting || isConfirmingGrant || isRevoking || isConfirmingRevoke;
-	const err = validationError || grantError?.message || revokeError?.message;
+	const err = grantError?.message || revokeError?.message;
 
-	const handleGrant = async () => {
-		const v = address.trim();
-		if (!v) return setValidationError("Enter an address");
-		if (!isAddress(v)) return setValidationError("Not a valid address");
-		if (summary?.roomWideSet.has(v.toLowerCase()))
-			return setValidationError("Already has room-wide access");
-		setValidationError(null);
-		await grantAccessToAllFolders(roomId, v);
-		setAddress("");
+	const handleGrant = async (address: string, expiresAt: bigint) => {
+		await grantAccessToAllFolders(roomId, address, expiresAt);
 	};
 
 	const handleRevoke = async (addr: string) => {
-		setValidationError(null);
 		setRevokingAddr(addr);
 		try {
 			await revokeAccessFromAllFolders(roomId, addr);
@@ -60,24 +52,12 @@ export function RoomWideAccessPanel({ dataRoomAddress, roomId }: Props) {
 	};
 
 	const roomWide = summary?.roomWide ?? [];
+	const roomWideExpiry = summary?.roomWideExpiry ?? new Map<string, bigint>();
+	const nowSec = BigInt(Math.floor(Date.now() / 1000));
 
 	return (
 		<div className="space-y-3">
-			<div className="flex gap-2">
-				<Input
-					type="text"
-					value={address}
-					onChange={(e) => setAddress(e.target.value)}
-					placeholder="0x..."
-					className="flex-1"
-					style={{ fontFamily: "monospace" }}
-					onKeyDown={(e) => e.key === "Enter" && handleGrant()}
-					disabled={isBusy}
-				/>
-				<Button size="sm" onClick={handleGrant} disabled={isBusy}>
-					{isGranting || isConfirmingGrant ? "..." : "Grant"}
-				</Button>
-			</div>
+			<GrantAccessForm onGrant={handleGrant} isPending={isBusy} />
 
 			{isBusy && (
 				<div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -93,29 +73,45 @@ export function RoomWideAccessPanel({ dataRoomAddress, roomId }: Props) {
 				</p>
 			)}
 
-			{isLoading ? (
-				<p className="text-xs text-muted-foreground">Loading grantees…</p>
-			) : roomWide.length === 0 ? (
+			{isLoading && <p className="text-xs text-muted-foreground">Loading grantees…</p>}
+
+			{!isLoading && roomWide.length === 0 && (
 				<p className="text-xs text-muted-foreground">No room-wide grants yet.</p>
-			) : (
+			)}
+
+			{!isLoading && roomWide.length > 0 && (
 				<div className="space-y-1">
-					{roomWide.map((addr) => (
-						<div
-							key={addr}
-							className="flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-border bg-card"
-						>
-							<CopyableAddress value={addr} />
-							<Button
-								size="sm"
-								variant="dangerLink"
-								onClick={() => handleRevoke(addr)}
-								disabled={isBusy}
+					{roomWide.map((addr) => {
+						const exp = roomWideExpiry.get(addr.toLowerCase()) ?? 0n;
+						const expired = exp !== PERMANENT && exp !== 0n && nowSec >= exp;
+						return (
+							<div
+								key={addr}
+								className="flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-border bg-card"
 							>
-								<UserMinus className="h-3.5 w-3.5" />
-								{revokingAddr === addr && (isRevoking || isConfirmingRevoke) ? "…" : "Revoke"}
-							</Button>
-						</div>
-					))}
+								<div className="min-w-0">
+									<CopyableAddress value={addr} />
+									<p className={`text-xs ${expired ? "text-destructive" : "text-muted-foreground"}`}>
+										{formatExpiry({
+											address: addr as HexAddress,
+											expiresAt: exp,
+											permanent: exp === PERMANENT,
+											expired,
+										})}
+									</p>
+								</div>
+								<Button
+									size="sm"
+									variant="dangerLink"
+									onClick={() => handleRevoke(addr)}
+									disabled={isBusy}
+								>
+									<UserMinus className="h-3.5 w-3.5" />
+									{revokingAddr === addr && (isRevoking || isConfirmingRevoke) ? "…" : "Revoke"}
+								</Button>
+							</div>
+						);
+					})}
 				</div>
 			)}
 		</div>

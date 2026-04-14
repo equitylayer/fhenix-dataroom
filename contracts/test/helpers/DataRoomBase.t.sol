@@ -78,6 +78,13 @@ abstract contract DataRoomBaseTest is BaseTest {
         r[2] = c;
     }
 
+    /// @dev Array of `PERMANENT` expiries — for tests that don't care about expiry.
+    function _permExp(uint256 n) internal pure returns (uint256[] memory r) {
+        r = new uint256[](n);
+        uint256 perm = type(uint256).max;
+        for (uint256 i; i < n; i++) r[i] = perm;
+    }
+
     /// @dev getDocument as board (avoids Unauthorized on private folders)
     function _getDoc(uint256 roomId, uint256 docIndex)
         internal

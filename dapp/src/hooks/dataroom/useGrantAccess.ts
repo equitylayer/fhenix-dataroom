@@ -17,13 +17,17 @@ export function useGrantAccess(dataRoomAddress: HexAddress | undefined) {
 	const [error, setError] = useState<Error | null>(null);
 
 	const grantAccess = useCallback(
-		async (roomId: bigint, users: string[]) => {
+		async (roomId: bigint, users: string[], expiresAt: bigint[]) => {
 			if (!signerPromise || !dataRoomAddress) return;
+			if (users.length !== expiresAt.length) {
+				setError(new Error("users and expiresAt arrays must be the same length"));
+				return;
+			}
 			setIsPending(true);
 			setError(null);
 			try {
 				const contract = await getDataRoomSignerContract(dataRoomAddress, signerPromise);
-				const tx = await contract.grantAccess(roomId, users);
+				const tx = await contract.grantAccess(roomId, users, expiresAt);
 				setIsPending(false);
 				setIsConfirming(true);
 				await tx.wait();

@@ -29,7 +29,16 @@ export function useRoomAccessSummary(
 			const roomWide = [...roomWideRaw];
 			const roomWideSet = new Set(roomWide.map((a) => a.toLowerCase()));
 
-			return { folderIds, roomWide, roomWideSet };
+			// Fetch per-user expiry in parallel. 0 = not a grantee; PERMANENT = no expiry.
+			const expiryEntries = await Promise.all(
+				roomWide.map(async (addr) => {
+					const exp = (await contract.getRoomWideExpiry(roomId!, addr)) as bigint;
+					return [addr.toLowerCase(), exp] as const;
+				}),
+			);
+			const roomWideExpiry = new Map<string, bigint>(expiryEntries);
+
+			return { folderIds, roomWide, roomWideSet, roomWideExpiry };
 		},
 		enabled: !!signerPromise && !!dataRoomAddress && roomId !== undefined && isOwner,
 		structuralSharing: false,
