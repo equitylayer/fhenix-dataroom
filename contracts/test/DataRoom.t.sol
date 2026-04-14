@@ -542,6 +542,25 @@ contract DataRoomTest is DataRoomBaseTest, CoFheTest {
         vm.stopPrank();
     }
 
+    function test_grantAccessToAllFolders_newFoldersInheritGrant() public {
+        vm.startPrank(board);
+        // Grant room-wide BEFORE any additional folder exists
+        room.grantAccessToAllFolders(PARENT, member);
+
+        // Existing FOLDER has the member
+        assertEq(room.getMembers(FOLDER).length, 2);
+
+        // Create a new folder after the room-wide grant
+        uint256 newFolder = room.createFolder(PARENT, "Late");
+
+        // New folder should have the room-wide grantee too (owner + member)
+        assertEq(room.getMembers(newFolder).length, 2);
+        vm.stopPrank();
+
+        vm.prank(member);
+        assertTrue(room.hasAccess(newFolder));
+    }
+
     function test_getRoomWideGrantees_rejectsNonAdmin() public {
         vm.prank(member);
         vm.expectRevert(DataRoom.Unauthorized.selector);

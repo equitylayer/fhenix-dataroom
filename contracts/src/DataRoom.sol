@@ -184,6 +184,16 @@ contract DataRoom {
 
         _grantUser(roomId, msg.sender);
 
+        // Propagate existing room-wide grants to the new folder, so room-wide
+        // access includes folders created after the grant.
+        address[] memory roomWide = _roomWideAccess[parentId].values();
+        for (uint256 i; i < roomWide.length;) {
+            _grantUser(roomId, roomWide[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
         emit FolderCreated(parentId, roomId);
     }
 

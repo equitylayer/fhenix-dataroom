@@ -39,3 +39,11 @@ git tag v0.1.0 && git push origin master --tags   # triggers Firebase deploy
 ```bash
 cd contracts && forge test -vvv
 ```
+
+What was done:
+
+* Secrets added
+* UX overhaul for better access control management.
+* Fixed bugs with dataroom that would not give space wide access to new folders.
+* Added FileViewer so users can see the files instead of downloading them
+* Shareable URLs for files!

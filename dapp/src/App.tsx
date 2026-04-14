@@ -1,7 +1,7 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
-import { Shield, Users, FileText, KeyRound } from "lucide-react";
+import { Shield, Users, FileText, KeyRound, Droplet } from "lucide-react";
 import { DocumentsTab } from "@/pages/DataRoom/DocumentsTab";
 import { VaultListPage } from "@/pages/SecretsVault";
 import { NamespaceDetailPage } from "@/pages/SecretsVault/NamespaceDetail";
@@ -111,14 +111,12 @@ function NavLinks() {
 
 	const itemClass = (active: boolean) =>
 		cn(
-			"inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs orbitron uppercase tracking-wider transition-colors",
-			active
-				? "!text-primary !bg-primary/10"
-				: "!text-muted-foreground hover:!text-foreground hover:!bg-accent/50",
+			"inline-flex items-center gap-1.5 px-3 py-1.5 text-xs orbitron uppercase tracking-wider transition-colors",
+			active ? "!text-[#6C5CE7]" : "!text-muted-foreground hover:!text-foreground",
 		);
 
 	return (
-		<nav className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-sm">
+		<nav className="inline-flex items-center gap-4">
 			<Link to="/" className={itemClass(isDataRoom)} style={{ textDecoration: "none" }}>
 				<FileText className="h-3.5 w-3.5" />
 				Data Room
@@ -141,20 +139,23 @@ function App() {
 	return (
 		<SecretsVaultProvider>
 			<div className="min-h-screen bg-[#f0f0f5]">
-				<header className="border-b border-border bg-white/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between sticky top-0 z-50">
-					<div className="flex items-center gap-6">
-						<Link to="/" style={{ textDecoration: "none" }}>
-							<img src="/favicon.svg?v=2" alt="Obolos" className="h-7 w-7" />
-						</Link>
+				<header className="relative border-b border-border bg-white/80 backdrop-blur-sm px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+					<Link to="/" style={{ textDecoration: "none" }}>
+						<img src="/favicon.svg?v=2" alt="Obolos" className="h-7 w-7" />
+					</Link>
+
+					<div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
 						<NavLinks />
 					</div>
+
 					<div className="flex items-center gap-4">
 						<a
 							href="https://www.alchemy.com/faucets/arbitrum-sepolia"
 							target="_blank"
 							rel="noopener noreferrer"
-							className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+							className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
 						>
+							<Droplet className="h-3.5 w-3.5" />
 							Faucet
 						</a>
 						<ConnectButton accountStatus="address" showBalance={false} chainStatus="full" />
