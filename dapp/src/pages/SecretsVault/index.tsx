@@ -32,7 +32,7 @@ export function VaultListPage() {
 	const isLoading = ownedLoading || sharedLoading;
 
 	return (
-		<div className="space-y-10">
+		<div>
 			<div id="my-vaults" className="scroll-mt-24">
 				<div className="flex items-center justify-between mb-6">
 					<h2 className="text-lg font-semibold">My Vaults</h2>
@@ -90,7 +90,7 @@ export function VaultListPage() {
 				)}
 			</div>
 
-			<div id="shared-vaults" className="scroll-mt-24">
+			<div id="shared-vaults" className="scroll-mt-24 mt-14">
 				<div className="flex items-center justify-between mb-6">
 					<h2 className="text-lg font-semibold">Shared With Me</h2>
 				</div>

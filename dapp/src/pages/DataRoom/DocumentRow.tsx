@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { FileText, Download, Loader2, ShieldCheck, Globe, AlertTriangle } from "lucide-react";
 import { useDocument } from "@/hooks/dataroom";
 import { useStoracha } from "@/hooks/useStoracha";
@@ -17,6 +18,8 @@ export function DocumentRow({ dataRoomAddress, roomId, docIndex, encrypted, room
 	const { data, isLoading, error } = useDocument(dataRoomAddress, roomId, docIndex);
 	const { downloadDecrypted, downloadPlain, downloadEncryptedBlob } = useStoracha();
 	const [isDownloading, setIsDownloading] = useState(false);
+	const navigate = useNavigate();
+	const { roomId: parentRoomIdParam } = useParams();
 
 	const isEncrypted = !!data?.wrappedKey && data.wrappedKey !== "0x";
 
@@ -32,7 +35,8 @@ export function DocumentRow({ dataRoomAddress, roomId, docIndex, encrypted, room
 	const downloadTitle =
 		encrypted && isEncrypted ? "Download encrypted blob" : isEncrypted ? "Download & decrypt" : "Download";
 
-	const handleClick = async () => {
+	const handleDownload = async (e: React.MouseEvent | React.KeyboardEvent) => {
+		e.stopPropagation();
 		if (!data) return;
 		setIsDownloading(true);
 		try {
@@ -50,6 +54,11 @@ export function DocumentRow({ dataRoomAddress, roomId, docIndex, encrypted, room
 		} finally {
 			setIsDownloading(false);
 		}
+	};
+
+	const handleOpenViewer = () => {
+		if (!data || !parentRoomIdParam) return;
+		navigate(`/room/${parentRoomIdParam}/folder/${roomId.toString()}/doc/${docIndex.toString()}`);
 	};
 
 	if (isLoading) {
@@ -71,7 +80,15 @@ export function DocumentRow({ dataRoomAddress, roomId, docIndex, encrypted, room
 	}
 
 	return (
-		<div className="group flex items-center justify-between py-2.5 border-b last:border-0 hover:bg-accent/30 -mx-2 px-2 rounded transition-colors">
+		<div
+			role="button"
+			tabIndex={0}
+			onClick={handleOpenViewer}
+			onKeyDown={(e) => {
+				if (e.key === "Enter") handleOpenViewer();
+			}}
+			className="group flex items-center justify-between py-2.5 border-b last:border-0 hover:bg-accent/30 -mx-2 px-2 rounded transition-colors cursor-pointer"
+		>
 			<div className="flex items-center gap-3 min-w-0">
 				<FileText className="h-4 w-4 text-muted-foreground shrink-0" />
 				<div className="min-w-0">
@@ -89,9 +106,9 @@ export function DocumentRow({ dataRoomAddress, roomId, docIndex, encrypted, room
 			<span
 				role="button"
 				tabIndex={0}
-				onClick={handleClick}
+				onClick={handleDownload}
 				onKeyDown={(e) => {
-					if (e.key === "Enter") handleClick();
+					if (e.key === "Enter") handleDownload(e);
 				}}
 				className="shrink-0 ml-2 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground transition-all cursor-pointer"
 				title={downloadTitle}

@@ -57,11 +57,6 @@ export class SecretsVaultClient {
 		return { account: this.address };
 	}
 
-	/**
-	 * Wait for a TX receipt and throw if it reverted. Without this check, viem
-	 * returns silently-reverted receipts, which manifests as confusing downstream
-	 * read errors (e.g. "secret not found after 6 attempts").
-	 */
 	private async waitAndCheck(hash: Hash, label: string) {
 		const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
 		if (receipt.status !== "success") {
@@ -135,8 +130,6 @@ export class SecretsVaultClient {
 		await this.waitAndCheck(hash, "setSecret");
 
 		// 5. For new secrets: second TX to backfill the per-secret encrypted value.
-		// Brief poll for block propagation; waitAndCheck above already proved the TX succeeded,
-		// so any persistent revert here is a deeper problem — surface it.
 		if (!encryptedValue) {
 			let secretHandle: Awaited<ReturnType<typeof this.contract.read.getSecretKeyHandle>>;
 			let lastErr: unknown;

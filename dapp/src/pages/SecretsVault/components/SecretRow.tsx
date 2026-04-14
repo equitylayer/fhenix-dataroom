@@ -72,7 +72,7 @@ export function SecretRow({ namespaceId, secretKey, isOwner }: Props) {
 	}
 
 	return (
-		<div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-3 hover:bg-accent/30 transition-colors">
+		<div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-3">
 			<Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
 
 			<div className="flex items-center gap-3 min-w-0">
@@ -96,7 +96,7 @@ export function SecretRow({ namespaceId, secretKey, isOwner }: Props) {
 				{data ? new Date(data.updatedAt * 1000).toLocaleDateString() : ""}
 			</span>
 
-			<div className="flex items-center gap-0.5 shrink-0">
+			<div className="flex items-center gap-1.5 shrink-0">
 				<button
 					type="button"
 					className="btn-reset p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-accent transition-colors"

@@ -55,7 +55,7 @@ export function GrantAccessForm({ onGrant, isPending }: Props) {
 					className="flex-1"
 					style={{ fontFamily: "monospace" }}
 				/>
-				<Button type="submit" variant="outline" size="sm" disabled={isPending}>
+				<Button type="submit" size="sm" disabled={isPending}>
 					{isPending ? "..." : "Grant"}
 				</Button>
 			</div>

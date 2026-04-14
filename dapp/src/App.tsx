@@ -1,12 +1,13 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
-import { Routes, Route, Navigate, Link, NavLink } from "react-router-dom";
-import { Shield, Lock, Users, FileText, KeyRound } from "lucide-react";
+import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { Shield, Users, FileText, KeyRound } from "lucide-react";
 import { DocumentsTab } from "@/pages/DataRoom/DocumentsTab";
 import { VaultListPage } from "@/pages/SecretsVault";
 import { NamespaceDetailPage } from "@/pages/SecretsVault/NamespaceDetail";
 import { SecretsVaultProvider } from "@/hooks/useSecretsVaultClient";
 import { DATAROOM_ADDRESS } from "@/lib/contracts";
+import { cn } from "@/lib/utils";
 
 function FeatureCard({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) {
 	return (
@@ -104,19 +105,28 @@ function LandingPage() {
 }
 
 function NavLinks() {
-	const linkClass = ({ isActive }: { isActive: boolean }) =>
-		`text-xs orbitron tracking-wider uppercase transition-colors ${
-			isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-		}`;
+	const { pathname } = useLocation();
+	const isDataRoom = pathname === "/" || pathname.startsWith("/room");
+	const isVault = pathname.startsWith("/vault");
+
+	const itemClass = (active: boolean) =>
+		cn(
+			"inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs orbitron uppercase tracking-wider transition-colors",
+			active
+				? "!text-primary !bg-primary/10"
+				: "!text-muted-foreground hover:!text-foreground hover:!bg-accent/50",
+		);
 
 	return (
-		<nav className="flex items-center gap-6">
-			<NavLink to="/" end className={linkClass}>
+		<nav className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-sm">
+			<Link to="/" className={itemClass(isDataRoom)} style={{ textDecoration: "none" }}>
+				<FileText className="h-3.5 w-3.5" />
 				Data Room
-			</NavLink>
-			<NavLink to="/vault" className={linkClass}>
+			</Link>
+			<Link to="/vault" className={itemClass(isVault)} style={{ textDecoration: "none" }}>
+				<KeyRound className="h-3.5 w-3.5" />
 				Secrets Vault
-			</NavLink>
+			</Link>
 		</nav>
 	);
 }
@@ -158,6 +168,10 @@ function App() {
 						<Route path="/room/:roomId" element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />} />
 						<Route
 							path="/room/:roomId/folder/:folderId"
+							element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />}
+						/>
+						<Route
+							path="/room/:roomId/folder/:folderId/doc/:docIndex"
 							element={<DocumentsTab dataRoomAddress={DATAROOM_ADDRESS} />}
 						/>
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { KeyRound, Loader2, Shield } from "lucide-react";
+import { KeyRound, Loader2, Plus, Shield } from "lucide-react";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,8 +116,9 @@ export function NamespaceDetailPage() {
 							<h3 className="text-sm font-semibold">Secrets</h3>
 						</div>
 						{isOwner && (
-							<Button size="sm" variant="outline" onClick={() => setShowForm(!showForm)}>
-								{showForm ? "Cancel" : "+ Add Secret"}
+							<Button variant="textLink" size="sm" onClick={() => setShowForm(!showForm)}>
+								<Plus className="h-4 w-4" />
+								{showForm ? "Cancel" : "Add Secret"}
 							</Button>
 						)}
 					</div>
