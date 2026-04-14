@@ -96,7 +96,7 @@ export function SecretRow({ namespaceId, secretKey, isOwner }: Props) {
 				{data ? new Date(data.updatedAt * 1000).toLocaleDateString() : ""}
 			</span>
 
-			<div className="flex items-center gap-1.5 shrink-0">
+			<div className="flex items-center gap-3 shrink-0">
 				<button
 					type="button"
 					className="btn-reset p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
@@ -135,8 +135,17 @@ export function SecretRow({ namespaceId, secretKey, isOwner }: Props) {
 				open={confirmDelete}
 				onOpenChange={setConfirmDelete}
 				title="Delete secret"
-				description={`Permanently delete "${secretKey}"? This cannot be undone.`}
+				className="max-w-sm"
 			>
+				<div className="flex items-start gap-3 mb-5">
+					<div className="shrink-0 p-2 rounded-md bg-destructive/10 text-destructive">
+						<Trash2 className="h-4 w-4" />
+					</div>
+					<div className="text-sm text-muted-foreground">
+						<span className="font-mono font-medium text-foreground">{secretKey}</span> will be
+						permanently removed from this vault. This cannot be undone.
+					</div>
+				</div>
 				<ModalActions
 					onCancel={() => setConfirmDelete(false)}
 					onSubmit={handleDelete}

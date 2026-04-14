@@ -59,10 +59,23 @@ export class SecretsVaultClient {
 
 	private async waitAndCheck(hash: Hash, label: string) {
 		const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
-		if (receipt.status !== "success") {
-			throw new Error(`${label} reverted on-chain (tx ${hash}). Check namespace ownership and sender address.`);
+		if (receipt.status === "success") return receipt;
+
+		let reason = "";
+		try {
+			const tx = await this.publicClient.getTransaction({ hash });
+			await this.publicClient.call({
+				to: tx.to!,
+				data: tx.input,
+				account: tx.from,
+				blockNumber: receipt.blockNumber - 1n,
+				value: tx.value,
+				gas: tx.gas,
+			});
+		} catch (e) {
+			reason = e instanceof Error ? e.message : String(e);
 		}
-		return receipt;
+		throw new Error(`${label} reverted on-chain (tx ${hash})${reason ? ": " + reason : ""}`);
 	}
 
 	async createNamespace(name: string): Promise<bigint> {
@@ -116,8 +129,15 @@ export class SecretsVaultClient {
 			const secretHandle = await this.contract.read.getSecretKeyHandle([namespaceId, key], this.readOpts);
 			const secretKeyHex = await this.decryptFheKey(secretHandle);
 			encryptedValue = await encryptSecret(value, secretKeyHex);
-		} catch {
-			// New secret — per-secret FHE key will be created by the contract
+		} catch (e) {
+			// Only SecretNotFound means "new secret, fall through to create flow".
+			// Anything else (FHE decrypt failure, read revert, etc.) is a real bug we'd
+			// otherwise silently turn into an unnecessary TX2.
+			const msg = e instanceof Error ? e.message : String(e);
+			const isNotFound = msg.includes("SecretNotFound");
+			if (!isNotFound) {
+				console.warn("[setSecret] per-secret encrypt step failed unexpectedly:", e);
+			}
 		}
 
 		// 4. First TX: create or update the secret
@@ -129,31 +149,39 @@ export class SecretsVaultClient {
 		]);
 		await this.waitAndCheck(hash, "setSecret");
 
-		// 5. For new secrets: second TX to backfill the per-secret encrypted value.
+		// 5. For new secrets: best-effort second TX to backfill the per-secret encrypted value.
+		//    Known bug: this TX sometimes reverts silently on-chain (see TODO.md).
+		//    The secret is fully functional for owner + namespace-level grantees via the
+		//    nsValue fallback; only per-secret grantees are affected. Warn and move on
+		//    instead of throwing a red error at the user.
 		if (!encryptedValue) {
-			let secretHandle: Awaited<ReturnType<typeof this.contract.read.getSecretKeyHandle>>;
-			let lastErr: unknown;
-			for (let attempt = 0; attempt < 3; attempt++) {
-				try {
-					secretHandle = await this.contract.read.getSecretKeyHandle([namespaceId, key], this.readOpts);
-					lastErr = undefined;
-					break;
-				} catch (e) {
-					lastErr = e;
-					await new Promise((r) => setTimeout(r, 500));
+			try {
+				let secretHandle: Awaited<ReturnType<typeof this.contract.read.getSecretKeyHandle>> | undefined;
+				for (let attempt = 0; attempt < 3; attempt++) {
+					try {
+						secretHandle = await this.contract.read.getSecretKeyHandle([namespaceId, key], this.readOpts);
+						break;
+					} catch {
+						await new Promise((r) => setTimeout(r, 500));
+					}
 				}
-			}
-			if (lastErr) throw lastErr;
-			const secretKeyHex = await this.decryptFheKey(secretHandle);
-			const encrypted = await encryptSecret(value, secretKeyHex);
+				if (!secretHandle) throw new Error("per-secret handle unavailable after create");
+				const secretKeyHex = await this.decryptFheKey(secretHandle);
+				const encrypted = await encryptSecret(value, secretKeyHex);
 
-			const hash2 = await this.contract.write.setSecret([
-				namespaceId,
-				key,
-				toHex(encrypted),
-				toHex(encryptedNsValue),
-			]);
-			await this.waitAndCheck(hash2, "setSecret (backfill)");
+				const hash2 = await this.contract.write.setSecret([
+					namespaceId,
+					key,
+					toHex(encrypted),
+					toHex(encryptedNsValue),
+				]);
+				await this.waitAndCheck(hash2, "setSecret (backfill)");
+			} catch (e) {
+				console.warn(
+					"[setSecret] per-secret backfill failed — namespace-level reads still work; per-secret grants will not be decryptable for this secret until a future `updateSecret`.",
+					e,
+				);
+			}
 		}
 	}
 
