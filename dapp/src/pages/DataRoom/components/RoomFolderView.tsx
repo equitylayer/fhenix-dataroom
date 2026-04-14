@@ -134,7 +134,7 @@ export function RoomFolderView({ dataRoomAddress, roomId, onSelectFolder }: IRoo
 					)}
 
 					{folders.length === 0 && !isFolderBusy ? (
-						<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
+						<div className="border border-dashed border-border rounded-lg bg-card py-12 text-center text-muted-foreground text-sm shadow-sm">
 							No folders yet.{isOwner ? " Create one to start adding documents." : ""}
 						</div>
 					) : (

@@ -148,7 +148,7 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 						Loading data rooms...
 					</div>
 				) : ownedRooms.length === 0 && !isCreatingRoom && !isConfirmingRoom ? (
-					<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
+					<div className="border border-dashed border-border rounded-lg bg-card py-12 text-center text-muted-foreground text-sm shadow-sm">
 						No data rooms yet. Create one to get started.
 					</div>
 				) : (
@@ -176,7 +176,7 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 						Loading shared rooms...
 					</div>
 				) : sharedRooms.length === 0 ? (
-					<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
+					<div className="border border-dashed border-border rounded-lg bg-card py-12 text-center text-muted-foreground text-sm shadow-sm">
 						No data rooms shared with you yet.
 					</div>
 				) : (
