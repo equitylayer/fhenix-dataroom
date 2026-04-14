@@ -58,7 +58,7 @@ function LandingPage() {
 				</div>
 
 				<h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4 bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
-					Obolos
+					Obolos Personal Cloud
 				</h2>
 
 				<p className="text-base text-white/50 mb-3 max-w-md mx-auto leading-relaxed">

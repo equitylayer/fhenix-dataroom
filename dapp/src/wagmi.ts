@@ -34,7 +34,7 @@ if (!chain) {
 const rpcUrl = chainId === anvil.id ? "http://127.0.0.1:8545" : import.meta.env.VITE_RPC_URL || undefined;
 
 export const config = getDefaultConfig({
-	appName: "Obolos DataRoom",
+	appName: "Obolos Personal Cloud",
 	projectId: "5706257c1983b2588ef21d961c632d66",
 	chains: [chain],
 	transports: {

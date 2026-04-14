@@ -1,4 +1,4 @@
-import { FheTypes } from "@cofhe/sdk";
+import { FheTypes, type CofheClient } from "@cofhe/sdk";
 import { CHAIN_ID } from "@/lib/contracts";
 import { createPublicClient, createWalletClient, custom, http, type WalletClient } from "viem";
 import { anvil, baseSepolia } from "viem/chains";
@@ -29,8 +29,7 @@ function setCached(handle: string, hex: string): void {
 // --- CoFHE client singleton ---
 const viemChain = CHAIN_ID === baseSepolia.id ? baseSepolia : anvil;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let clientPromise: Promise<any> | null = null;
+let clientPromise: Promise<CofheClient> | null = null;
 let connectedAccount: string | null = null;
 
 async function getCofheClient(walletClient: WalletClient) {
@@ -60,8 +59,10 @@ async function getCofheClient(walletClient: WalletClient) {
 
 		const config = createCofheConfig({ supportedChains: [chain] });
 		const client = createCofheClient(config);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		await client.connect(sdkPublicClient as any, sdkWalletClient as any);
+		await client.connect(
+			sdkPublicClient as unknown as Parameters<typeof client.connect>[0],
+			sdkWalletClient as unknown as Parameters<typeof client.connect>[1],
+		);
 		return client;
 	})();
 

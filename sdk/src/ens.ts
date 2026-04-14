@@ -50,9 +50,8 @@ async function subgraphReverseLookup(addressLower: string): Promise<string | nul
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ query }),
 	});
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const json: any = await res.json();
-	const name = json?.data?.domains?.[0]?.name;
+	const json = (await res.json()) as { data?: { domains?: Array<{ name?: string }> } };
+	const name = json.data?.domains?.[0]?.name;
 	return name ?? null;
 }
 
