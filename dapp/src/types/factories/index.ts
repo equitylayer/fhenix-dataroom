@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export { DataRoom__factory } from "./DataRoom__factory";
+export { SecretsVault__factory } from "./SecretsVault__factory";

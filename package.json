@@ -1,0 +1,5 @@
+{
+	"name": "fhenix-dataroom",
+	"private": true,
+	"workspaces": ["sdk", "dapp"]
+}

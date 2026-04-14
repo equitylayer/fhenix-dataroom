@@ -1,8 +1,7 @@
 import { useAccount } from "wagmi";
-import { useRoom, useRoomMembers, useDecryptFolder } from "@/hooks/dataroom";
+import { useRoom, useDecryptFolder } from "@/hooks/dataroom";
 import { DecryptPrompt, DecryptingState, RejectedState } from "./components/DecryptGate";
 import { DocumentList } from "./components/DocumentList";
-import { AccessGroup } from "./components/AccessGroup";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { HexAddress } from "@/lib/contracts";
@@ -17,7 +16,6 @@ export function FolderPanel({ dataRoomAddress, folderId }: IFolderPanelProps) {
 
 	const { data: folderData } = useRoom(dataRoomAddress, folderId);
 	const isOwner = !!address && !!folderData && folderData.owner.toLowerCase() === address.toLowerCase();
-	const { data: membersData } = useRoomMembers(dataRoomAddress, folderId, isOwner);
 	const {
 		roomKeyHex,
 		status: decryptStatus,
@@ -28,7 +26,6 @@ export function FolderPanel({ dataRoomAddress, folderId }: IFolderPanelProps) {
 		requestDecrypt,
 	} = useDecryptFolder(dataRoomAddress, folderId);
 
-	const members = (membersData as string[] | undefined) ?? [];
 	const documentCount = folderData ? Number(folderData.documentCount) : 0;
 
 	const status = !folderData ? "loading" : decryptStatus;
@@ -66,24 +63,13 @@ export function FolderPanel({ dataRoomAddress, folderId }: IFolderPanelProps) {
 						</div>
 					)}
 
-					<div className="grid gap-6 lg:grid-cols-3">
-						<DocumentList
-							dataRoomAddress={dataRoomAddress}
-							folderId={folderId}
-							documentCount={documentCount}
-							isOwner={isOwner}
-							roomKeyHex={roomKeyHex}
-						/>
-						<AccessGroup
-							dataRoomAddress={dataRoomAddress}
-							folderId={folderId}
-							members={members}
-							documentCount={documentCount}
-							isOwner={isOwner}
-							ownerAddress={folderData?.owner ?? ""}
-							roomKeyHex={roomKeyHex}
-						/>
-					</div>
+					<DocumentList
+						dataRoomAddress={dataRoomAddress}
+						folderId={folderId}
+						documentCount={documentCount}
+						isOwner={isOwner}
+						roomKeyHex={roomKeyHex}
+					/>
 				</>
 			)}
 		</>

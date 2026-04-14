@@ -316,6 +316,25 @@ const _abi = [
   },
   {
     type: "function",
+    name: "getRoomWideGrantees",
+    inputs: [
+      {
+        name: "parentId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "address[]",
+        internalType: "address[]",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "grantAccess",
     inputs: [
       {

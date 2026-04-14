@@ -2,5 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { DataRoom } from "./DataRoom";
+export type { SecretsVault } from "./SecretsVault";
 export * as factories from "./factories";
 export { DataRoom__factory } from "./factories/DataRoom__factory";
+export { SecretsVault__factory } from "./factories/SecretsVault__factory";

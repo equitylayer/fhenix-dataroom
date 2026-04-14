@@ -23,10 +23,14 @@ cast rpc anvil_setCode 0xa6Ea4b5291d044D93b73b3CFf3109A1128663E8B "$ACL_CODE" --
 cast rpc anvil_setCode 0x0000000000000000000000000000000000005001 "$ZK_CODE" --rpc-url "$RPC_URL" > /dev/null
 cast rpc anvil_setCode 0x0000000000000000000000000000000000005002 "$TN_CODE" --rpc-url "$RPC_URL" > /dev/null
 
-echo "▸ Deploying DataRoom (+ initialising CoFHE mocks)…"
+echo "▸ Deploying DataRoom + SecretsVault (+ initialising CoFHE mocks)…"
 forge script script/DeployLocal.s.sol:DeployLocal \
   --rpc-url "$RPC_URL" \
   --broadcast
+
+echo "▸ Pulling ABI for SecretsVault SDK…"
+cd "$DAPP_ROOT/../sdk"
+yarn pull-abi ../contracts --chain-id 31337
 
 echo "▸ Pulling ABIs and contract addresses…"
 cd "$DAPP_ROOT"

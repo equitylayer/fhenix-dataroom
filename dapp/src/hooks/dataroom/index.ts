@@ -5,6 +5,7 @@ export { useVisibleParentRooms } from "./useVisibleParentRooms";
 export { useAccessibleFolders } from "./useAccessibleFolders";
 export { useDocument } from "./useDocument";
 export { useRoomMembers } from "./useRoomMembers";
+export { useRoomAccessSummary } from "./useRoomAccessSummary";
 export { useRoomKeyHandle, useRoomKey } from "./useRoomKey";
 export { useDecryptFolder } from "./useDecryptFolder";
 export type { DecryptStatus } from "./useDecryptFolder";

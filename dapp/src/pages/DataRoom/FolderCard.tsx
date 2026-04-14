@@ -17,18 +17,22 @@ export function FolderCard({ dataRoomAddress, folderId, isOwner, onSelect }: IFo
 	const activeMemberCount = members ? members.length : Number(data.memberCount);
 
 	return (
-		<button
-			type="button"
+		<div
+			role="button"
+			tabIndex={0}
 			onClick={onSelect}
-			className="group w-full text-left border border-border rounded-lg bg-card p-4 shadow-sm hover:border-foreground/20 transition-all duration-200 cursor-pointer"
+			onKeyDown={(e) => {
+				if (e.key === "Enter") onSelect();
+			}}
+			className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md cursor-pointer"
 		>
-			<div className="flex items-center gap-3">
-				<div className="shrink-0 w-8 h-8 rounded-md bg-primary/8 flex items-center justify-center">
-					<FolderOpen className="h-4 w-4 text-primary" />
+			<div className="flex items-center gap-3 min-w-0">
+				<div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary shrink-0">
+					<FolderOpen className="h-4 w-4" />
 				</div>
-				<div className="flex-1 min-w-0">
-					<h3 className="font-semibold text-sm truncate">{data.name}</h3>
-					<div className="flex gap-3 mt-0.5 text-xs text-muted-foreground">
+				<div className="min-w-0">
+					<p className="font-semibold text-sm truncate">{data.name}</p>
+					<div className="flex gap-3 text-xs text-muted-foreground">
 						<span className="flex items-center gap-1">
 							<FileText className="h-3 w-3" />
 							{data.documentCount.toString()}
@@ -39,8 +43,8 @@ export function FolderCard({ dataRoomAddress, folderId, isOwner, onSelect }: IFo
 						</span>
 					</div>
 				</div>
-				<ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
 			</div>
-		</button>
+			<ChevronRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary shrink-0" />
+		</div>
 	);
 }

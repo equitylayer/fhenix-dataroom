@@ -14,6 +14,7 @@
 	},
 	"dependencies": {
 		"@cofhe/sdk": "^0.4.0",
+		"@obolos/secretsvault-sdk": "0.1.0",
 		"@radix-ui/react-slot": "^1.2.3",
 		"@rainbow-me/rainbowkit": "^2.2.10",
 		"@storacha/client": "^2.1.2",
@@ -29,7 +30,8 @@
 		"tailwind-merge": "^3.3.1",
 		"tailwindcss": "^4.1.14",
 		"viem": "^2.40.0",
-		"wagmi": "^2.19.5"
+		"wagmi": "^2.19.5",
+		"zod": "^3.24.1"
 	},
 	"devDependencies": {
 		"@typechain/ethers-v6": "^0.5.1",

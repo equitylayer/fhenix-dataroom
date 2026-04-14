@@ -8,14 +8,16 @@ import { RoomCard } from "./RoomCard";
 import { FolderPanel } from "./FolderPanel";
 import { RoomFolderView } from "./components/RoomFolderView";
 import { DataRoomBreadcrumb } from "./components/DataRoomBreadcrumb";
+import { FileViewer } from "./components/FileViewer";
 import type { HexAddress } from "@/lib/contracts";
 
 export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress }) {
-	const { roomId: roomIdParam, folderId: folderIdParam } = useParams();
+	const { roomId: roomIdParam, folderId: folderIdParam, docIndex: docIndexParam } = useParams();
 	const navigate = useNavigate();
 
 	const selectedRoomId = roomIdParam ? BigInt(roomIdParam) : null;
 	const selectedFolderId = folderIdParam ? BigInt(folderIdParam) : null;
+	const selectedDocIndex = docIndexParam !== undefined ? BigInt(docIndexParam) : null;
 
 	const {
 		createRoom,
@@ -56,6 +58,15 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 					dataRoomAddress={dataRoomAddress}
 					folderId={selectedFolderId}
 				/>
+
+				{selectedDocIndex !== null && (
+					<FileViewer
+						dataRoomAddress={dataRoomAddress}
+						roomId={selectedRoomId}
+						folderId={selectedFolderId}
+						docIndex={selectedDocIndex}
+					/>
+				)}
 			</div>
 		);
 	}
@@ -137,7 +148,7 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 						Loading data rooms...
 					</div>
 				) : ownedRooms.length === 0 && !isCreatingRoom && !isConfirmingRoom ? (
-					<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
+					<div className="border border-dashed border-border rounded-lg bg-card py-12 text-center text-muted-foreground text-sm shadow-sm">
 						No data rooms yet. Create one to get started.
 					</div>
 				) : (
@@ -165,7 +176,7 @@ export function DocumentsTab({ dataRoomAddress }: { dataRoomAddress: HexAddress 
 						Loading shared rooms...
 					</div>
 				) : sharedRooms.length === 0 ? (
-					<div className="border border-dashed border-border rounded-lg bg-card py-16 text-center text-muted-foreground text-sm shadow-sm">
+					<div className="border border-dashed border-border rounded-lg bg-card py-12 text-center text-muted-foreground text-sm shadow-sm">
 						No data rooms shared with you yet.
 					</div>
 				) : (
