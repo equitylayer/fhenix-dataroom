@@ -8,7 +8,7 @@ export const DEPLOYMENTS: Record<string, Record<string, HexAddress>> = {
     "SecretsVault": "0xa513e6e4b8f2a923d98304ec87f64353c4d5c853"
   },
   "84532": {
-    "DataRoom": "0x446a65dd1841d8cedc08aaa61c3163af565270b9",
-    "SecretsVault": "0xbde428ed6be43b03249d217cf0c6f7865396982e"
+    "DataRoom": "0x44c5d2a272b1274bc4573196b64f1510824f3e2c",
+    "SecretsVault": "0xeef3eb837bc95708261fc536fc11de8b7e6f85b3"
   }
 } as const;

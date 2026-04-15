@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Upload, FileText, RefreshCw, AlertTriangle, Lock, LockOpen, ShieldCheck, Globe } from "lucide-react";
 import { useAddDocuments } from "@/hooks/dataroom";
-import { useStoracha } from "@/hooks/useStoracha";
+import { useStorage } from "@/hooks/useStorage";
 import { Button } from "@/components/ui/button";
 import { DocumentRow } from "../DocumentRow";
 import type { HexAddress } from "@/lib/contracts";
@@ -31,7 +31,7 @@ interface IDocumentRowProps {
 
 export function DocumentList({ dataRoomAddress, folderId, documentCount, isOwner, roomKeyHex }: IDocumentRowProps) {
 	const { addDocuments, isPending: isAddingDoc, isConfirming: isConfirmingDoc } = useAddDocuments(dataRoomAddress);
-	const { uploadEncrypted, uploadPlain, isUploading, initialize, isReady: storachaReady } = useStoracha();
+	const { uploadEncrypted, uploadPlain, isUploading, initialize, isReady: storageReady } = useStorage();
 
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 	const [uploadError, setUploadError] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export function DocumentList({ dataRoomAddress, folderId, documentCount, isOwner
 		setUploadProgress(null);
 
 		try {
-			if (!storachaReady) {
+			if (!storageReady) {
 				setUploadProgress("Connecting...");
 				await initialize();
 			}

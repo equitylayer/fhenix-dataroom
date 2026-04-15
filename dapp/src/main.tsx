@@ -17,7 +17,28 @@ import App from "./App";
 import { config } from "./wagmi";
 import { ToastProvider } from "./components/ui/toast";
 
-const queryClient = new QueryClient();
+/** Bail out of retries when the user explicitly rejected a wallet signature.
+ *  Otherwise react-query hammers them with repeat prompts. */
+function isUserRejection(err: unknown): boolean {
+	const msg = err instanceof Error ? err.message : String(err);
+	return (
+		msg.includes("user rejected") ||
+		msg.includes("ACTION_REJECTED") ||
+		msg.includes("User denied") ||
+		msg.includes("User rejected")
+	);
+}
+
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			retry: (failureCount, error) => !isUserRejection(error) && failureCount < 3,
+		},
+		mutations: {
+			retry: false,
+		},
+	},
+});
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>

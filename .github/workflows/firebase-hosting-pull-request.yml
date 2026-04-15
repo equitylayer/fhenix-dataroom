@@ -25,8 +25,7 @@ jobs:
         working-directory: dapp
         env:
           VITE_CHAIN_ID: ${{ secrets.VITE_CHAIN_ID }}
-          VITE_STORACHA_KEY: ${{ secrets.VITE_STORACHA_KEY }}
-          VITE_STORACHA_PROOF: ${{ secrets.VITE_STORACHA_PROOF }}
+          VITE_PINATA_JWT: ${{ secrets.VITE_PINATA_JWT }}
         run: yarn build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:

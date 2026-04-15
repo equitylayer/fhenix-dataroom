@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FileText, Download, Loader2, ShieldCheck, Globe, AlertTriangle } from "lucide-react";
 import { useDocument } from "@/hooks/dataroom";
-import { useStoracha } from "@/hooks/useStoracha";
+import { useStorage } from "@/hooks/useStorage";
 import { saveBlob } from "@/lib/utils";
 import type { HexAddress } from "@/lib/contracts";
 
@@ -16,7 +16,7 @@ interface IDocumentRowProps {
 
 export function DocumentRow({ dataRoomAddress, roomId, docIndex, encrypted, roomKeyHex }: IDocumentRowProps) {
 	const { data, isLoading, error } = useDocument(dataRoomAddress, roomId, docIndex);
-	const { downloadDecrypted, downloadPlain, downloadEncryptedBlob } = useStoracha();
+	const { downloadDecrypted, downloadPlain, downloadEncryptedBlob } = useStorage();
 	const [isDownloading, setIsDownloading] = useState(false);
 	const navigate = useNavigate();
 	const { roomId: parentRoomIdParam } = useParams();

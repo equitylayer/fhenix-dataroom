@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { X, Download, Link2, Loader2, Lock, AlertTriangle, Check } from "lucide-react";
 import { useDocument, useDecryptFolder } from "@/hooks/dataroom";
-import { useStoracha } from "@/hooks/useStoracha";
+import { useStorage } from "@/hooks/useStorage";
 import { saveBlob } from "@/lib/utils";
 import { DecryptingState, RejectedState } from "./DecryptGate";
 import { FileContent, getFileExt, getFileCategory, getFileIcon, getMimeType } from "./FileContent";
@@ -26,7 +26,7 @@ export function FileViewer({ dataRoomAddress, roomId, folderId, docIndex, onClos
 		isLoading: isDocLoading,
 		error: docError,
 	} = useDocument(dataRoomAddress, folderId, docIndex);
-	const { downloadDecrypted, downloadPlain } = useStoracha();
+	const { downloadDecrypted, downloadPlain } = useStorage();
 	const {
 		roomKeyHex,
 		status: decryptStatus,
