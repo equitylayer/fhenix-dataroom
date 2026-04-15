@@ -30,6 +30,7 @@ export function useAddDocuments(dataRoomAddress: HexAddress | undefined) {
 				await tx.wait();
 				setIsConfirming(false);
 				queryClient.invalidateQueries({ refetchType: "all" });
+				setTimeout(() => queryClient.invalidateQueries({ refetchType: "all" }), 2500);
 			} catch (e) {
 				console.error("addDocuments failed:", e);
 				setIsPending(false);

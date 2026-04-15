@@ -29,6 +29,7 @@ export function useCreateRoom(dataRoomAddress: HexAddress | undefined) {
 				const receipt = await tx.wait();
 				setIsConfirming(false);
 				await queryClient.invalidateQueries({ refetchType: "all" });
+				setTimeout(() => queryClient.invalidateQueries({ refetchType: "all" }), 2500);
 
 				const createdRoomLog = receipt?.logs
 					.map((log) => {

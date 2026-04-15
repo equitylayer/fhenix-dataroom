@@ -22,6 +22,7 @@ export function useVaultMutation(label: string) {
 				dismiss();
 				push({ variant: "success", title: "Transaction confirmed" });
 				queryClient.invalidateQueries({ refetchType: "all" });
+				setTimeout(() => queryClient.invalidateQueries({ refetchType: "all" }), 2500);
 			} catch (e: unknown) {
 				const msg = e instanceof Error ? e.message : "Failed";
 				dismiss();
