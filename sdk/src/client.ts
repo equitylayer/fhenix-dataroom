@@ -68,7 +68,6 @@ export class SecretsVaultClient {
 				to: tx.to!,
 				data: tx.input,
 				account: tx.from,
-				blockNumber: receipt.blockNumber - 1n,
 				value: tx.value,
 				gas: tx.gas,
 			});
@@ -140,13 +139,16 @@ export class SecretsVaultClient {
 			}
 		}
 
-		// 4. First TX: create or update the secret
-		const hash = await this.contract.write.setSecret([
-			namespaceId,
-			key,
-			encryptedValue ? toHex(encryptedValue) : "0x",
-			toHex(encryptedNsValue),
-		]);
+		// 4. First TX: create or update the secret.
+		const hash = await this.contract.write.setSecret(
+			[
+				namespaceId,
+				key,
+				encryptedValue ? toHex(encryptedValue) : "0x",
+				toHex(encryptedNsValue),
+			],
+			{ gas: 600_000n },
+		);
 		await this.waitAndCheck(hash, "setSecret");
 
 		// 5. For new secrets: best-effort second TX to backfill the per-secret encrypted value.
@@ -169,12 +171,15 @@ export class SecretsVaultClient {
 				const secretKeyHex = await this.decryptFheKey(secretHandle);
 				const encrypted = await encryptSecret(value, secretKeyHex);
 
-				const hash2 = await this.contract.write.setSecret([
-					namespaceId,
-					key,
-					toHex(encrypted),
-					toHex(encryptedNsValue),
-				]);
+				const hash2 = await this.contract.write.setSecret(
+					[
+						namespaceId,
+						key,
+						toHex(encrypted),
+						toHex(encryptedNsValue),
+					],
+					{ gas: 400_000n },
+				);
 				await this.waitAndCheck(hash2, "setSecret (backfill)");
 			} catch (e) {
 				console.warn(
