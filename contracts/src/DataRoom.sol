@@ -3,10 +3,11 @@ pragma solidity ^0.8.24;
 
 import {FHE, euint128} from "@fhenixprotocol/cofhe-contracts/FHE.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 
 /// @title DataRoom
 /// @notice Trustless data room with FHE-encrypted access control.
-contract DataRoom {
+contract DataRoom is Multicall {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     // Errors

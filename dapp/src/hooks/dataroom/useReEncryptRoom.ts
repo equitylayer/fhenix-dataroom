@@ -62,12 +62,13 @@ export function useReEncryptRoom(dataRoomAddress: HexAddress | undefined) {
 				const rekeyTx = await contract.rekeyAllFolders(roomId);
 				await rekeyTx.wait();
 
-				// 3. Re-wrap documents per folder (requires new key → 1 update TX each)
+				// 3. Re-wrap documents per folder, then batch all updates via multicall (1 TX)
+				const multicallData: string[] = [];
+
 				for (let f = 0; f < folderTotal; f++) {
 					const { folderId, documentCount, oldKeyHex } = folderMeta[f];
 					if (documentCount === 0) continue;
 
-					// Decrypt new key
 					const newKeyHandle = await contract.getRoomKey(folderId);
 					const newKeyHex = await decryptRoomKey(newKeyHandle, walletClient);
 
@@ -90,9 +91,15 @@ export function useReEncryptRoom(dataRoomAddress: HexAddress | undefined) {
 						newWrappedKeys.push(bytesToHex(newWrapped));
 					}
 
-					setProgress({ phase: "updating", folderCurrent: f + 1, folderTotal, docCurrent: 0, docTotal: documentCount });
 					const docIndices = Array.from({ length: documentCount }, (_, i) => BigInt(i));
-					const updateTx = await contract.updateDocumentKeys(folderId, docIndices, newWrappedKeys);
+					multicallData.push(
+						contract.interface.encodeFunctionData("updateDocumentKeys", [folderId, docIndices, newWrappedKeys]),
+					);
+				}
+
+				if (multicallData.length > 0) {
+					setProgress({ phase: "updating", folderCurrent: folderTotal, folderTotal, docCurrent: 0, docTotal: 0 });
+					const updateTx = await contract.multicall(multicallData);
 					await updateTx.wait();
 				}
 

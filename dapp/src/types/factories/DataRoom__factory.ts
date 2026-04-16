@@ -498,6 +498,25 @@ const _abi = [
   },
   {
     type: "function",
+    name: "multicall",
+    inputs: [
+      {
+        name: "data",
+        type: "bytes[]",
+        internalType: "bytes[]",
+      },
+    ],
+    outputs: [
+      {
+        name: "results",
+        type: "bytes[]",
+        internalType: "bytes[]",
+      },
+    ],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "operator",
     inputs: [],
     outputs: [
@@ -932,6 +951,17 @@ const _abi = [
   },
   {
     type: "error",
+    name: "AddressEmptyCode",
+    inputs: [
+      {
+        name: "target",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+  },
+  {
+    type: "error",
     name: "AlreadyInitialized",
     inputs: [],
   },
@@ -958,6 +988,11 @@ const _abi = [
   {
     type: "error",
     name: "EmptyBatch",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "FailedCall",
     inputs: [],
   },
   {

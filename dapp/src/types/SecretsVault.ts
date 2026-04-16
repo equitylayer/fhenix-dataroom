@@ -43,6 +43,7 @@ export interface SecretsVaultInterface extends Interface {
       | "grantNamespaceAccess"
       | "grantSecretAccess"
       | "hasAccess"
+      | "multicall"
       | "namespaceCount"
       | "owner"
       | "renounceOwnership"
@@ -132,6 +133,10 @@ export interface SecretsVaultInterface extends Interface {
   encodeFunctionData(
     functionFragment: "hasAccess",
     values: [BigNumberish, BytesLike, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "multicall",
+    values: [BytesLike[]]
   ): string;
   encodeFunctionData(
     functionFragment: "namespaceCount",
@@ -226,6 +231,7 @@ export interface SecretsVaultInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "hasAccess", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "multicall", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "namespaceCount",
     data: BytesLike
@@ -577,6 +583,8 @@ export interface SecretsVault extends BaseContract {
     "view"
   >;
 
+  multicall: TypedContractMethod<[data: BytesLike[]], [string[]], "nonpayable">;
+
   namespaceCount: TypedContractMethod<[], [bigint], "view">;
 
   owner: TypedContractMethod<[], [string], "view">;
@@ -737,6 +745,9 @@ export interface SecretsVault extends BaseContract {
     [boolean],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "multicall"
+  ): TypedContractMethod<[data: BytesLike[]], [string[]], "nonpayable">;
   getFunction(
     nameOrSignature: "namespaceCount"
   ): TypedContractMethod<[], [bigint], "view">;

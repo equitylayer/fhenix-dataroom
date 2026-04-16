@@ -1,4 +1,5 @@
 import {
+	encodeFunctionData,
 	getContract,
 	toHex,
 	hexToBytes,
@@ -263,21 +264,27 @@ export class SecretsVaultClient {
 		const hash = await this.contract.write.rotateNamespaceKey([namespaceId]);
 		await this.waitAndCheck(hash, "rotateNamespaceKey");
 
-		// 3. Re-encrypt with NEW namespace key and update
+		// 3. Re-encrypt with NEW namespace key, batch all updates via multicall (1 TX)
 		const newNsHandle = await this.contract.read.getNsKeyHandle([namespaceId], this.readOpts);
 		const newNsKeyHex = await this.decryptFheKey(newNsHandle);
 
+		const multicallData: `0x${string}`[] = [];
 		for (let i = 0; i < plaintexts.length; i++) {
 			onProgress?.(total + i, total * 2);
 			const { key, plain, secretEncrypted } = plaintexts[i];
 			const newNsValue = await encryptSecret(plain, newNsKeyHex);
-			const hash2 = await this.contract.write.setSecret([
-				namespaceId,
-				key,
-				secretEncrypted ? toHex(secretEncrypted) : "0x",
-				toHex(newNsValue),
-			]);
-			await this.waitAndCheck(hash2, `re-encrypt ${key}`);
+			multicallData.push(
+				encodeFunctionData({
+					abi: SECRETS_VAULT_ABI,
+					functionName: "setSecret",
+					args: [namespaceId, key, secretEncrypted ? toHex(secretEncrypted) : "0x", toHex(newNsValue)],
+				}),
+			);
+		}
+
+		if (multicallData.length > 0) {
+			const hash2 = await this.contract.write.multicall([multicallData]);
+			await this.waitAndCheck(hash2, "re-encrypt (batch update)");
 		}
 		onProgress?.(total * 2, total * 2);
 	}

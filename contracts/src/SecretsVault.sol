@@ -4,13 +4,14 @@ pragma solidity ^0.8.24;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 import {FHE, euint128} from "@fhenixprotocol/cofhe-contracts/FHE.sol";
 
 /// @title SecretsVault
 /// @notice Self-sovereign secrets management. Namespaces hold secrets, each dual-encrypted
 ///         with a per-secret FHE key and the namespace FHE key. Two access layers with expiry:
 ///         namespace-wide (read all) or per-secret (read one).
-contract SecretsVault is Ownable {
+contract SecretsVault is Ownable, Multicall {
     using EnumerableSet for EnumerableSet.UintSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableMap for EnumerableMap.AddressToUintMap;

@@ -48,6 +48,7 @@ export interface DataRoomInterface extends Interface {
       | "grantAccessToAllFolders"
       | "hasAccess"
       | "initialize"
+      | "multicall"
       | "operator"
       | "ownerOf"
       | "rekeyAllFolders"
@@ -152,6 +153,10 @@ export interface DataRoomInterface extends Interface {
   encodeFunctionData(
     functionFragment: "initialize",
     values: [AddressLike, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "multicall",
+    values: [BytesLike[]]
   ): string;
   encodeFunctionData(functionFragment: "operator", values?: undefined): string;
   encodeFunctionData(
@@ -263,6 +268,7 @@ export interface DataRoomInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "hasAccess", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "multicall", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "operator", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
   decodeFunctionResult(
@@ -566,6 +572,8 @@ export interface DataRoom extends BaseContract {
     "nonpayable"
   >;
 
+  multicall: TypedContractMethod<[data: BytesLike[]], [string[]], "nonpayable">;
+
   operator: TypedContractMethod<[], [string], "view">;
 
   ownerOf: TypedContractMethod<[roomId: BigNumberish], [string], "view">;
@@ -780,6 +788,9 @@ export interface DataRoom extends BaseContract {
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "multicall"
+  ): TypedContractMethod<[data: BytesLike[]], [string[]], "nonpayable">;
   getFunction(
     nameOrSignature: "operator"
   ): TypedContractMethod<[], [string], "view">;
