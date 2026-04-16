@@ -227,6 +227,61 @@ export class SecretsVaultClient {
 		return [...keys];
 	}
 
+	/**
+	 * Re-encrypt all secrets in a namespace with a fresh FHE key.
+	 * Flow: decrypt all nsValues with old key → rotate on-chain → re-encrypt with new key → update.
+	 * Calls `onProgress(current, total)` for UI feedback.
+	 */
+	async reEncryptNamespace(
+		namespaceId: bigint,
+		onProgress?: (current: number, total: number) => void,
+	): Promise<void> {
+		const keys = await this.listSecrets(namespaceId);
+		const total = keys.length;
+
+		// 1. Decrypt all secrets with current keys (before rotation invalidates them)
+		const plaintexts: { key: string; plain: string; secretEncrypted: Uint8Array | null }[] = [];
+		for (let i = 0; i < keys.length; i++) {
+			onProgress?.(i, total);
+			const secret = await this.getSecret(namespaceId, keys[i]);
+			// Also grab per-secret encrypted value if present
+			const [value] = await this.contract.read.getSecret([namespaceId, keys[i]], this.readOpts);
+			const valueBytes = hexToBytes(value as `0x${string}`);
+			let secretEnc: Uint8Array | null = null;
+			if (valueBytes.length > IV_BYTES) {
+				const secretHandle = await this.contract.read.getSecretKeyHandle(
+					[namespaceId, keys[i]],
+					this.readOpts,
+				);
+				const secretKeyHex = await this.decryptFheKey(secretHandle);
+				secretEnc = await encryptSecret(secret.value, secretKeyHex);
+			}
+			plaintexts.push({ key: keys[i], plain: secret.value, secretEncrypted: secretEnc });
+		}
+
+		// 2. Rotate on-chain (generates new FHE key, re-allows grantees)
+		const hash = await this.contract.write.rotateNamespaceKey([namespaceId]);
+		await this.waitAndCheck(hash, "rotateNamespaceKey");
+
+		// 3. Re-encrypt with NEW namespace key and update
+		const newNsHandle = await this.contract.read.getNsKeyHandle([namespaceId], this.readOpts);
+		const newNsKeyHex = await this.decryptFheKey(newNsHandle);
+
+		for (let i = 0; i < plaintexts.length; i++) {
+			onProgress?.(total + i, total * 2);
+			const { key, plain, secretEncrypted } = plaintexts[i];
+			const newNsValue = await encryptSecret(plain, newNsKeyHex);
+			const hash2 = await this.contract.write.setSecret([
+				namespaceId,
+				key,
+				secretEncrypted ? toHex(secretEncrypted) : "0x",
+				toHex(newNsValue),
+			]);
+			await this.waitAndCheck(hash2, `re-encrypt ${key}`);
+		}
+		onProgress?.(total * 2, total * 2);
+	}
+
 	async grantNamespaceAccess(namespaceId: bigint, account: HexAddress, expiresAt?: bigint): Promise<void> {
 		const expiry = expiresAt ?? PERMANENT;
 		const hash = await this.contract.write.grantNamespaceAccess([namespaceId, account, expiry]);

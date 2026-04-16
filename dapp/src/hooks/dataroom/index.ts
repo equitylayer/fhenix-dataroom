@@ -18,6 +18,7 @@ export { useRevokeAccess } from "./useRevokeAccess";
 export { useGrantAccessToAllFolders } from "./useGrantAccessToAllFolders";
 export { useRevokeAccessFromAllFolders } from "./useRevokeAccessFromAllFolders";
 export { useRekeyAndRewrap, RekeyPhase } from "./useRekeyAndRewrap";
+export { useReEncryptRoom } from "./useReEncryptRoom";
 export type { RekeyProgress } from "./useRekeyAndRewrap";
 export { useCommitAccessChanges, CommitPhase } from "./useCommitAccessChanges";
 export type { CommitProgress } from "./useCommitAccessChanges";

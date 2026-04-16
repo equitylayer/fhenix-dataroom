@@ -48,6 +48,8 @@ export interface SecretsVaultInterface extends Interface {
       | "renounceOwnership"
       | "revokeNamespaceAccess"
       | "revokeSecretAccess"
+      | "rotateNamespaceKey"
+      | "rotateSecretKey"
       | "setSecret"
       | "transferOwnership"
   ): FunctionFragment;
@@ -57,10 +59,12 @@ export interface SecretsVaultInterface extends Interface {
       | "NamespaceAccessGranted"
       | "NamespaceAccessRevoked"
       | "NamespaceCreated"
+      | "NamespaceKeyRotated"
       | "OwnershipTransferred"
       | "SecretAccessGranted"
       | "SecretAccessRevoked"
       | "SecretDeleted"
+      | "SecretKeyRotated"
       | "SecretSet"
   ): EventFragment;
 
@@ -147,6 +151,14 @@ export interface SecretsVaultInterface extends Interface {
     values: [BigNumberish, string, AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "rotateNamespaceKey",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "rotateSecretKey",
+    values: [BigNumberish, string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setSecret",
     values: [BigNumberish, string, BytesLike, BytesLike]
   ): string;
@@ -231,6 +243,14 @@ export interface SecretsVaultInterface extends Interface {
     functionFragment: "revokeSecretAccess",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "rotateNamespaceKey",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "rotateSecretKey",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "setSecret", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
@@ -284,6 +304,18 @@ export namespace NamespaceCreatedEvent {
     namespaceId: bigint;
     owner: string;
     name: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace NamespaceKeyRotatedEvent {
+  export type InputTuple = [namespaceId: BigNumberish];
+  export type OutputTuple = [namespaceId: bigint];
+  export interface OutputObject {
+    namespaceId: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -352,6 +384,19 @@ export namespace SecretAccessRevokedEvent {
 }
 
 export namespace SecretDeletedEvent {
+  export type InputTuple = [namespaceId: BigNumberish, keyHash: BytesLike];
+  export type OutputTuple = [namespaceId: bigint, keyHash: string];
+  export interface OutputObject {
+    namespaceId: bigint;
+    keyHash: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace SecretKeyRotatedEvent {
   export type InputTuple = [namespaceId: BigNumberish, keyHash: BytesLike];
   export type OutputTuple = [namespaceId: bigint, keyHash: string];
   export interface OutputObject {
@@ -550,6 +595,18 @@ export interface SecretsVault extends BaseContract {
     "nonpayable"
   >;
 
+  rotateNamespaceKey: TypedContractMethod<
+    [namespaceId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  rotateSecretKey: TypedContractMethod<
+    [namespaceId: BigNumberish, key: string],
+    [void],
+    "nonpayable"
+  >;
+
   setSecret: TypedContractMethod<
     [
       namespaceId: BigNumberish,
@@ -704,6 +761,16 @@ export interface SecretsVault extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "rotateNamespaceKey"
+  ): TypedContractMethod<[namespaceId: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "rotateSecretKey"
+  ): TypedContractMethod<
+    [namespaceId: BigNumberish, key: string],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "setSecret"
   ): TypedContractMethod<
     [
@@ -741,6 +808,13 @@ export interface SecretsVault extends BaseContract {
     NamespaceCreatedEvent.OutputObject
   >;
   getEvent(
+    key: "NamespaceKeyRotated"
+  ): TypedContractEvent<
+    NamespaceKeyRotatedEvent.InputTuple,
+    NamespaceKeyRotatedEvent.OutputTuple,
+    NamespaceKeyRotatedEvent.OutputObject
+  >;
+  getEvent(
     key: "OwnershipTransferred"
   ): TypedContractEvent<
     OwnershipTransferredEvent.InputTuple,
@@ -767,6 +841,13 @@ export interface SecretsVault extends BaseContract {
     SecretDeletedEvent.InputTuple,
     SecretDeletedEvent.OutputTuple,
     SecretDeletedEvent.OutputObject
+  >;
+  getEvent(
+    key: "SecretKeyRotated"
+  ): TypedContractEvent<
+    SecretKeyRotatedEvent.InputTuple,
+    SecretKeyRotatedEvent.OutputTuple,
+    SecretKeyRotatedEvent.OutputObject
   >;
   getEvent(
     key: "SecretSet"
@@ -808,6 +889,17 @@ export interface SecretsVault extends BaseContract {
       NamespaceCreatedEvent.InputTuple,
       NamespaceCreatedEvent.OutputTuple,
       NamespaceCreatedEvent.OutputObject
+    >;
+
+    "NamespaceKeyRotated(uint256)": TypedContractEvent<
+      NamespaceKeyRotatedEvent.InputTuple,
+      NamespaceKeyRotatedEvent.OutputTuple,
+      NamespaceKeyRotatedEvent.OutputObject
+    >;
+    NamespaceKeyRotated: TypedContractEvent<
+      NamespaceKeyRotatedEvent.InputTuple,
+      NamespaceKeyRotatedEvent.OutputTuple,
+      NamespaceKeyRotatedEvent.OutputObject
     >;
 
     "OwnershipTransferred(address,address)": TypedContractEvent<
@@ -852,6 +944,17 @@ export interface SecretsVault extends BaseContract {
       SecretDeletedEvent.InputTuple,
       SecretDeletedEvent.OutputTuple,
       SecretDeletedEvent.OutputObject
+    >;
+
+    "SecretKeyRotated(uint256,bytes32)": TypedContractEvent<
+      SecretKeyRotatedEvent.InputTuple,
+      SecretKeyRotatedEvent.OutputTuple,
+      SecretKeyRotatedEvent.OutputObject
+    >;
+    SecretKeyRotated: TypedContractEvent<
+      SecretKeyRotatedEvent.InputTuple,
+      SecretKeyRotatedEvent.OutputTuple,
+      SecretKeyRotatedEvent.OutputObject
     >;
 
     "SecretSet(uint256,bytes32)": TypedContractEvent<

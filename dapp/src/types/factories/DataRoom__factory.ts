@@ -530,6 +530,19 @@ const _abi = [
   },
   {
     type: "function",
+    name: "rekeyAllFolders",
+    inputs: [
+      {
+        name: "parentId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "rekeyRoom",
     inputs: [
       {

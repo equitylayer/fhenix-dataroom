@@ -406,6 +406,19 @@ contract DataRoom {
         _rekeyRoom(roomId);
     }
 
+    /// @notice Re-key every folder under a parent room in a single transaction.
+    function rekeyAllFolders(uint256 parentId) external roomExists(parentId) onlyRoomOwner(parentId) {
+        Room storage parent = rooms[parentId];
+        if (!parent.isParent) revert NotParentRoom();
+
+        for (uint256 i = 0; i < parent.childCount;) {
+            _rekeyRoom(_children[parentId][i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     // ─── Internal Helpers
 
     /// @dev Grant a single user access to a folder. If already a member, updates expiry in place.

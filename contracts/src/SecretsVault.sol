@@ -60,6 +60,8 @@ contract SecretsVault is Ownable {
         uint256 indexed namespaceId, bytes32 indexed keyHash, address indexed account, uint256 expiresAt
     );
     event SecretAccessRevoked(uint256 indexed namespaceId, bytes32 indexed keyHash, address indexed account);
+    event NamespaceKeyRotated(uint256 indexed namespaceId);
+    event SecretKeyRotated(uint256 indexed namespaceId, bytes32 indexed keyHash);
 
     modifier onlyNsOwner(uint256 namespaceId) {
         if (_namespaces[namespaceId].owner == address(0)) {
@@ -298,6 +300,45 @@ contract SecretsVault is Ownable {
     {
         return _secretAccess[namespaceId][keccak256(bytes(key))].keys();
     }
+
+    // ─── Key Rotation
+
+    /// @notice Rotate the namespace FHE key. Client must re-encrypt nsValues afterwards.
+    function rotateNamespaceKey(uint256 namespaceId) external onlyNsOwner(namespaceId) {
+        euint128 newKey = FHE.randomEuint128();
+        _nsKey[namespaceId] = newKey;
+        FHE.allowThis(newKey);
+        FHE.allow(newKey, msg.sender);
+
+        address[] memory grantees = _nsAccess[namespaceId].keys();
+        for (uint256 i; i < grantees.length; ++i) {
+            FHE.allow(newKey, grantees[i]);
+        }
+
+        emit NamespaceKeyRotated(namespaceId);
+    }
+
+    /// @notice Rotate a per-secret FHE key. Client must re-encrypt the value afterwards.
+    function rotateSecretKey(uint256 namespaceId, string calldata key) external onlyNsOwner(namespaceId) {
+        bytes32 keyHash = keccak256(bytes(key));
+        if (bytes(_secrets[namespaceId][keyHash].key).length == 0) {
+            revert SecretNotFound(namespaceId, key);
+        }
+
+        euint128 newKey = FHE.randomEuint128();
+        _secretFheKey[namespaceId][keyHash] = newKey;
+        FHE.allowThis(newKey);
+        FHE.allow(newKey, msg.sender);
+
+        address[] memory grantees = _secretAccess[namespaceId][keyHash].keys();
+        for (uint256 i; i < grantees.length; ++i) {
+            FHE.allow(newKey, grantees[i]);
+        }
+
+        emit SecretKeyRotated(namespaceId, keyHash);
+    }
+
+    // ─── Views
 
     function getNsKeyHandle(uint256 namespaceId) external view returns (euint128) {
         Namespace storage ns = _namespaces[namespaceId];

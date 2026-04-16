@@ -50,6 +50,7 @@ export interface DataRoomInterface extends Interface {
       | "initialize"
       | "operator"
       | "ownerOf"
+      | "rekeyAllFolders"
       | "rekeyRoom"
       | "removeDocument"
       | "renameRoom"
@@ -158,6 +159,10 @@ export interface DataRoomInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "rekeyAllFolders",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "rekeyRoom",
     values: [BigNumberish]
   ): string;
@@ -260,6 +265,10 @@ export interface DataRoomInterface extends Interface {
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "operator", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "rekeyAllFolders",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "rekeyRoom", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "removeDocument",
@@ -561,6 +570,12 @@ export interface DataRoom extends BaseContract {
 
   ownerOf: TypedContractMethod<[roomId: BigNumberish], [string], "view">;
 
+  rekeyAllFolders: TypedContractMethod<
+    [parentId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   rekeyRoom: TypedContractMethod<[roomId: BigNumberish], [void], "nonpayable">;
 
   removeDocument: TypedContractMethod<
@@ -771,6 +786,9 @@ export interface DataRoom extends BaseContract {
   getFunction(
     nameOrSignature: "ownerOf"
   ): TypedContractMethod<[roomId: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "rekeyAllFolders"
+  ): TypedContractMethod<[parentId: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "rekeyRoom"
   ): TypedContractMethod<[roomId: BigNumberish], [void], "nonpayable">;

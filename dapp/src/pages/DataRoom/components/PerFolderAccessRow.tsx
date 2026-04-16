@@ -413,7 +413,7 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 								onClick={() => setShowRekeyWarning(true)}
 								className="!text-[0.65rem] !text-muted-foreground"
 							>
-								Rotate folder key
+								Re-encrypt folder
 							</Button>
 						</div>
 					)}
@@ -445,25 +445,25 @@ export function PerFolderAccessRow({ dataRoomAddress, folderId, isOwner, inherit
 					<Modal
 						open={showRekeyWarning}
 						onOpenChange={setShowRekeyWarning}
-						title="Rotate folder key"
-						description="Generates a new encryption key and re-wraps every document in this folder."
+						title="Re-encrypt folder"
+						description="Generate a fresh encryption key and re-wrap every document in this folder."
 					>
 						<div className="rounded px-3 py-2 text-xs bg-muted mb-4">
-							<p className="font-semibold mb-1">This will:</p>
+							<p className="font-semibold mb-1">What this does:</p>
 							<ul className="ml-4 list-disc space-y-0.5">
 								<li>Generate a new folder encryption key</li>
 								<li>
 									Re-wrap encryption keys for {documentCount} document{documentCount !== 1 ? "s" : ""}
 								</li>
 								<li>Save wrapped keys on-chain</li>
-								<li>Revoked users lose access to all documents in this folder</li>
+								<li>Previously revoked users can no longer decrypt, even cached values</li>
 							</ul>
 							<p className="mt-2 font-semibold">Slow for folders with many documents.</p>
 						</div>
 						<ModalActions
 							onCancel={() => setShowRekeyWarning(false)}
 							onSubmit={handleRotateKey}
-							submitText={!roomKeyHex ? "Decrypt & Rotate" : "Rotate & Re-wrap"}
+							submitText={!roomKeyHex ? "Decrypt & Re-encrypt" : "Re-encrypt"}
 							loadingText="Processing…"
 							isLoading={false}
 						/>

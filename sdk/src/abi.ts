@@ -482,6 +482,37 @@ export const SECRETS_VAULT_ABI = [
   },
   {
     "type": "function",
+    "name": "rotateNamespaceKey",
+    "inputs": [
+      {
+        "name": "namespaceId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "rotateSecretKey",
+    "inputs": [
+      {
+        "name": "namespaceId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "key",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setSecret",
     "inputs": [
       {
@@ -592,6 +623,19 @@ export const SECRETS_VAULT_ABI = [
   },
   {
     "type": "event",
+    "name": "NamespaceKeyRotated",
+    "inputs": [
+      {
+        "name": "namespaceId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "OwnershipTransferred",
     "inputs": [
       {
@@ -668,6 +712,25 @@ export const SECRETS_VAULT_ABI = [
   {
     "type": "event",
     "name": "SecretDeleted",
+    "inputs": [
+      {
+        "name": "namespaceId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "keyHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SecretKeyRotated",
     "inputs": [
       {
         "name": "namespaceId",

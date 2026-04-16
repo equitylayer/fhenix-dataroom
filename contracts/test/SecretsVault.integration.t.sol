@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {CoFheTest} from "@cofhe/mock-contracts/foundry/CoFheTest.sol";
 import {SecretsVault} from "../src/SecretsVault.sol";
+import {euint128} from "@fhenixprotocol/cofhe-contracts/FHE.sol";
 
 contract SecretsVaultIntegrationTest is CoFheTest {
     SecretsVault public vault;
@@ -217,5 +218,63 @@ contract SecretsVaultIntegrationTest is CoFheTest {
         vault.grantSecretAccess(nsId, KEY, contractor, 5000);
         assertEq(vault.getSecretGrantees(nsId, KEY).length, 1);
         vm.stopPrank();
+    }
+
+    function test_rotateNamespaceKey() public {
+        vm.startPrank(admin);
+        uint256 nsId = vault.createNamespace("prod");
+        vault.setSecret(nsId, DB_PASSWORD, "old-enc", "ns-old-enc");
+        vault.grantNamespaceAccess(nsId, dev1, type(uint256).max);
+        vault.grantNamespaceAccess(nsId, dev2, type(uint256).max);
+
+        // Rotate (generates new FHE key, re-allows grantees)
+        vault.rotateNamespaceKey(nsId);
+
+        // Grantees can still read the handle (FHE.allow was re-granted)
+        vm.stopPrank();
+        vm.prank(dev1);
+        vault.getNsKeyHandle(nsId); // should not revert
+
+        vm.prank(dev2);
+        vault.getNsKeyHandle(nsId); // should not revert
+
+        // Old ciphertext still in storage (client re-encrypts separately)
+        vm.prank(admin);
+        (bytes memory val,,,) = vault.getSecret(nsId, DB_PASSWORD);
+        assertEq(val, "old-enc");
+    }
+
+    function test_rotateSecretKey() public {
+        vm.startPrank(admin);
+        uint256 nsId = vault.createNamespace("staging");
+        vault.setSecret(nsId, API_KEY, "old-api-enc", "ns-old-api-enc");
+        vault.grantSecretAccess(nsId, API_KEY, dev1, type(uint256).max);
+
+        vault.rotateSecretKey(nsId, API_KEY);
+
+        // Grantee can still read the handle (FHE.allow was re-granted)
+        vm.stopPrank();
+        vm.prank(dev1);
+        vault.getSecretKeyHandle(nsId, API_KEY); // should not revert
+    }
+
+    function test_rotateNamespaceKey_rejectsNonOwner() public {
+        vm.startPrank(admin);
+        uint256 nsId = vault.createNamespace("test");
+        vm.stopPrank();
+
+        vm.prank(dev1);
+        vm.expectRevert(abi.encodeWithSelector(SecretsVault.NotNamespaceOwner.selector, nsId));
+        vault.rotateNamespaceKey(nsId);
+    }
+
+    function test_rotateSecretKey_rejectsNonExistent() public {
+        vm.startPrank(admin);
+        uint256 nsId = vault.createNamespace("test");
+        vm.stopPrank();
+
+        vm.prank(admin);
+        vm.expectRevert(abi.encodeWithSelector(SecretsVault.SecretNotFound.selector, nsId, "NOPE"));
+        vault.rotateSecretKey(nsId, "NOPE");
     }
 }
