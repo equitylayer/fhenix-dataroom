@@ -52,26 +52,23 @@ export function DocumentList({ dataRoomAddress, folderId, documentCount, isOwner
 				await initialize();
 			}
 
-			const cids: string[] = [];
-			const names: string[] = [];
-			const wrappedKeys: string[] = [];
 			const total = selectedFiles.length;
+			setUploadProgress(`Uploading ${total} file${total === 1 ? "" : "s"}...`);
 
-			for (let i = 0; i < total; i++) {
-				if (encryptUpload) {
-					setUploadProgress(`Encrypting ${i + 1}/${total}...`);
-					const { cid, encodedName, wrappedKeyHex } = await uploadEncrypted(selectedFiles[i], roomKeyHex!);
-					cids.push(cid);
-					names.push(encodedName);
-					wrappedKeys.push(wrappedKeyHex);
-				} else {
-					setUploadProgress(`Uploading ${i + 1}/${total}...`);
-					const { cid, encodedName } = await uploadPlain(selectedFiles[i]);
-					cids.push(cid);
-					names.push(encodedName);
-					wrappedKeys.push("0x");
-				}
-			}
+			const results = await Promise.all(
+				selectedFiles.map(async (file) => {
+					if (encryptUpload) {
+						const { cid, encodedName, wrappedKeyHex } = await uploadEncrypted(file, roomKeyHex!);
+						return { cid, name: encodedName, wrappedKey: wrappedKeyHex };
+					}
+					const { cid, encodedName } = await uploadPlain(file);
+					return { cid, name: encodedName, wrappedKey: "0x" };
+				}),
+			);
+
+			const cids = results.map((r) => r.cid);
+			const names = results.map((r) => r.name);
+			const wrappedKeys = results.map((r) => r.wrappedKey);
 
 			setUploadProgress(null);
 			await addDocuments(folderId, cids, names, wrappedKeys);

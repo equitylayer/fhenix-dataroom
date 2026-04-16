@@ -191,6 +191,74 @@ export class SecretsVaultClient {
 		}
 	}
 
+	/**
+	 * Set multiple secrets in 2 TXs (instead of 2 per secret):
+	 *   TX1: multicall of setSecret (creates FHE keys, stores nsValues)
+	 *   TX2: multicall of setSecret (backfills per-secret encrypted values)
+	 */
+	async batchSetSecrets(
+		namespaceId: bigint,
+		entries: { key: string; value: string }[],
+		onProgress?: (current: number, total: number) => void,
+	): Promise<void> {
+		if (entries.length === 0) return;
+
+		// 1. Get namespace key and encrypt all values with it
+		const nsHandle = await this.contract.read.getNsKeyHandle([namespaceId], this.readOpts);
+		const nsKeyHex = await this.decryptFheKey(nsHandle);
+
+		const createCalls: `0x${string}`[] = [];
+		const nsEncrypted: Uint8Array[] = [];
+
+		for (let i = 0; i < entries.length; i++) {
+			onProgress?.(i, entries.length * 2);
+			const enc = await encryptSecret(entries[i].value, nsKeyHex);
+			nsEncrypted.push(enc);
+			createCalls.push(
+				encodeFunctionData({
+					abi: SECRETS_VAULT_ABI,
+					functionName: "setSecret",
+					args: [namespaceId, entries[i].key, "0x", toHex(enc)],
+				}),
+			);
+		}
+
+		// TX1: create all secrets (generates per-secret FHE keys)
+		const hash1 = await this.contract.write.multicall([createCalls], { gas: BigInt(600_000 * entries.length) });
+		await this.waitAndCheck(hash1, "batchSetSecrets (create)");
+
+		// 2. Backfill: decrypt each per-secret key, re-encrypt, batch update
+		const backfillCalls: `0x${string}`[] = [];
+		for (let i = 0; i < entries.length; i++) {
+			onProgress?.(entries.length + i, entries.length * 2);
+			try {
+				const secretHandle = await this.contract.read.getSecretKeyHandle(
+					[namespaceId, entries[i].key],
+					this.readOpts,
+				);
+				const secretKeyHex = await this.decryptFheKey(secretHandle);
+				const encrypted = await encryptSecret(entries[i].value, secretKeyHex);
+				backfillCalls.push(
+					encodeFunctionData({
+						abi: SECRETS_VAULT_ABI,
+						functionName: "setSecret",
+						args: [namespaceId, entries[i].key, toHex(encrypted), toHex(nsEncrypted[i])],
+					}),
+				);
+			} catch (e) {
+				console.warn(`[batchSetSecrets] backfill skipped for ${entries[i].key}:`, e);
+			}
+		}
+
+		if (backfillCalls.length > 0) {
+			const hash2 = await this.contract.write.multicall([backfillCalls], {
+				gas: BigInt(400_000 * backfillCalls.length),
+			});
+			await this.waitAndCheck(hash2, "batchSetSecrets (backfill)");
+		}
+		onProgress?.(entries.length * 2, entries.length * 2);
+	}
+
 	async getSecret(namespaceId: bigint, key: string): Promise<SecretValue> {
 		const [value, nsValue, createdAt, updatedAt] = await this.contract.read.getSecret(
 			[namespaceId, key],

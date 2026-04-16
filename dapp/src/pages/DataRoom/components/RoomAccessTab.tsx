@@ -120,7 +120,7 @@ export function RoomAccessTab({ dataRoomAddress, roomId, isOwner }: Props) {
 						<li>Previously revoked users can no longer decrypt, even cached values</li>
 					</ul>
 					<p className="mt-2 font-semibold">
-						Requires signing {folderIds.length} rekey transaction{folderIds.length === 1 ? "" : "s"} + {folderIds.length} update{folderIds.length === 1 ? "" : "s"}.
+						Requires 2 signatures (1 batch rekey + 1 batch key update).
 					</p>
 				</div>
 				<ModalActions
