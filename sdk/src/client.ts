@@ -58,6 +58,19 @@ export class SecretsVaultClient {
 		return { account: this.address };
 	}
 
+	private async decryptFheKeyWithRetry(handle: unknown, attempts = 8, delayMs = 1000): Promise<string> {
+		let lastErr: unknown;
+		for (let i = 0; i < attempts; i++) {
+			try {
+				return await this.decryptFheKey(handle as Parameters<DecryptFheKeyFn>[0]);
+			} catch (e) {
+				lastErr = e;
+				if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs));
+			}
+		}
+		throw lastErr;
+	}
+
 	private async waitAndCheck(hash: Hash, label: string) {
 		const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
 		if (receipt.status === "success") return receipt;
@@ -152,24 +165,14 @@ export class SecretsVaultClient {
 		);
 		await this.waitAndCheck(hash, "setSecret");
 
-		// 5. For new secrets: best-effort second TX to backfill the per-secret encrypted value.
-		//    Known bug: this TX sometimes reverts silently on-chain (see TODO.md).
-		//    The secret is fully functional for owner + namespace-level grantees via the
-		//    nsValue fallback; only per-secret grantees are affected. Warn and move on
-		//    instead of throwing a red error at the user.
+		// 5. For new secrets: second TX to backfill the per-secret encrypted value.
+		//    The CoFHE coprocessor takes a few seconds to materialize the fresh key
+		//    ciphertext after TX1 confirms — retry decrypt with backoff. Without this
+		//    the backfill silently fails and per-secret grantees can't decrypt.
 		if (!encryptedValue) {
 			try {
-				let secretHandle: Awaited<ReturnType<typeof this.contract.read.getSecretKeyHandle>> | undefined;
-				for (let attempt = 0; attempt < 3; attempt++) {
-					try {
-						secretHandle = await this.contract.read.getSecretKeyHandle([namespaceId, key], this.readOpts);
-						break;
-					} catch {
-						await new Promise((r) => setTimeout(r, 500));
-					}
-				}
-				if (!secretHandle) throw new Error("per-secret handle unavailable after create");
-				const secretKeyHex = await this.decryptFheKey(secretHandle);
+				const secretHandle = await this.contract.read.getSecretKeyHandle([namespaceId, key], this.readOpts);
+				const secretKeyHex = await this.decryptFheKeyWithRetry(secretHandle);
 				const encrypted = await encryptSecret(value, secretKeyHex);
 
 				const hash2 = await this.contract.write.setSecret(
@@ -236,7 +239,7 @@ export class SecretsVaultClient {
 					[namespaceId, entries[i].key],
 					this.readOpts,
 				);
-				const secretKeyHex = await this.decryptFheKey(secretHandle);
+				const secretKeyHex = await this.decryptFheKeyWithRetry(secretHandle);
 				const encrypted = await encryptSecret(entries[i].value, secretKeyHex);
 				backfillCalls.push(
 					encodeFunctionData({
@@ -296,11 +299,6 @@ export class SecretsVaultClient {
 		return [...keys];
 	}
 
-	/**
-	 * Re-encrypt all secrets in a namespace with a fresh FHE key.
-	 * Flow: decrypt all nsValues with old key → rotate on-chain → re-encrypt with new key → update.
-	 * Calls `onProgress(current, total)` for UI feedback.
-	 */
 	async reEncryptNamespace(
 		namespaceId: bigint,
 		onProgress?: (current: number, total: number) => void,
