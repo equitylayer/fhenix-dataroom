@@ -1,5 +1,8 @@
 {
 	"name": "fhenix-dataroom",
 	"private": true,
-	"workspaces": ["sdk", "dapp"]
+	"workspaces": [
+		"sdk",
+		"dapp"
+	]
 }
