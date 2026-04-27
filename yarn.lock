@@ -32,19 +32,19 @@
     viem "^2.31.7"
     zustand "5.0.3"
 
-"@cofhe/sdk@^0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@cofhe/sdk/-/sdk-0.4.0.tgz#bef9e39e3ae287953fafd61b625e1fa2bcb471cf"
-  integrity sha512-L+X8S9sKV0pT7gMAx4OxluiKnjP3uPQVw1GN+HBE8lRo8icZcPyGU2LrZQoXvnTU04g+147zvBhoZ0cSCMj1/Q==
+"@cofhe/sdk@0.5.0", "@cofhe/sdk@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@cofhe/sdk/-/sdk-0.5.0.tgz#1f3f292908ac4b3297b55a68afec2b07ad9d0156"
+  integrity sha512-KqYV2bNUVTRUsTJrKl+4i37Nf2bkcHefO0+0RvVn4GtlP13AFde1+WXZ4vSHwkLVXAQjIIvqqz3vmAAPQMmzhg==
   dependencies:
-    iframe-shared-storage "^1.0.34"
-    immer "^10.1.1"
-    node-tfhe "0.11.1"
-    tfhe "0.11.1"
-    tweetnacl "^1.0.3"
-    viem "^2.38.6"
-    zod "^4.0.0"
-    zustand "^5.0.1"
+    iframe-shared-storage "1.0.34"
+    immer "10.1.1"
+    node-tfhe "1.5.3"
+    tfhe "1.5.3"
+    tweetnacl "1.0.3"
+    viem "2.38.6"
+    zod "4.0.0"
+    zustand "5.0.1"
 
 "@coinbase/cdp-sdk@^1.0.0":
   version "1.47.0"
@@ -2103,6 +2103,11 @@ abitype@1.0.8:
   resolved "https://registry.yarnpkg.com/abitype/-/abitype-1.0.8.tgz#3554f28b2e9d6e9f35eb59878193eabd1b9f46ba"
   integrity sha512-ZeiI6h3GnW06uYDLx0etQtX/p8E24UaHHBj57RSjK7YBFe7iuVn07EDpOeP451D06sF27VOz9JJPlIKJmXgkEg==
 
+abitype@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/abitype/-/abitype-1.1.0.tgz#510c5b3f92901877977af5e864841f443bf55406"
+  integrity sha512-6Vh4HcRxNMLA0puzPjM5GBgT4aAcFGKZzSgAXvuZ27shJP6NEpielTuqbBmZILR5/xd0PizkBGy5hReKz9jl5A==
+
 abitype@1.2.3, abitype@^1.0.6, abitype@^1.0.9, abitype@^1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/abitype/-/abitype-1.2.3.tgz#bec3e09dea97d99ef6c719140bee663a329ad1f4"
@@ -3055,7 +3060,7 @@ ieee754@^1.2.1:
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.2.1.tgz#8eb7a10a63fff25d15a57b001586d177d1b0d352"
   integrity sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==
 
-iframe-shared-storage@^1.0.34:
+iframe-shared-storage@1.0.34:
   version "1.0.34"
   resolved "https://registry.yarnpkg.com/iframe-shared-storage/-/iframe-shared-storage-1.0.34.tgz#fb297c71dd138e96bf45f66e0bc8b8208a711e41"
   integrity sha512-sb80NhdVgVNhkc72pTyAjcaHQNiIPeu314zFtXbQaTjp9OOnaZ5+IjS/ylNXs08kwvlmBpg7GG5GOWzjRMP9Ww==
@@ -3063,10 +3068,10 @@ iframe-shared-storage@^1.0.34:
     idb-keyval "^6.2.2"
     postmsg-rpc "^2.4.0"
 
-immer@^10.1.1:
-  version "10.2.0"
-  resolved "https://registry.yarnpkg.com/immer/-/immer-10.2.0.tgz#88a4ce06a1af64172d254b70f7cb04df51c871b1"
-  integrity sha512-d/+XTN3zfODyjr89gM3mPq1WNX2B8pYsu7eORitdwyA2sBubnTl3laYlBk4sXY5FUa5qTZGBDPJICVbvqzjlbw==
+immer@10.1.1:
+  version "10.1.1"
+  resolved "https://registry.yarnpkg.com/immer/-/immer-10.1.1.tgz#206f344ea372d8ea176891545ee53ccc062db7bc"
+  integrity sha512-s2MPrmjovJcoMaHtx6K11Ra7oD05NT97w1IC5zpMkT6Atjr7H8LjaDd81iIxUYpMKSRRNMJE703M1Fhr/TctHw==
 
 inflight@^1.0.4:
   version "1.0.6"
@@ -3461,10 +3466,10 @@ node-mock-http@^1.0.4:
   resolved "https://registry.yarnpkg.com/node-mock-http/-/node-mock-http-1.0.4.tgz#21f2ab4ce2fe4fbe8a660d7c5195a1db85e042a4"
   integrity sha512-8DY+kFsDkNXy1sJglUfuODx1/opAGJGyrTuFqEoN90oRc2Vk0ZbD4K2qmKXBBEhZQzdKHIVfEJpDU8Ak2NJEvQ==
 
-node-tfhe@0.11.1:
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/node-tfhe/-/node-tfhe-0.11.1.tgz#7b3a44e97b04d5fb06e3b36a479ab851743eacad"
-  integrity sha512-QFkIeIZ5IbdvhpkzImwakL2+sZFCTXCwGvOacE1NczR+zgrg5ixHU9KpjuuIi1YbbKFGJEMoSUmivDktuzFaKg==
+node-tfhe@1.5.3:
+  version "1.5.3"
+  resolved "https://registry.yarnpkg.com/node-tfhe/-/node-tfhe-1.5.3.tgz#cb13046d0276e7afa8bb15080ce13e0693e68c1f"
+  integrity sha512-VjCx9vaNbTkw8I0IeMvmHPUOfjiXysbQXc9C4LKx4V8GmPNKufL6fAaDyFWWeAuHa/xs/AaWlTQ3jkTlFL4K+w==
 
 normalize-path@^3.0.0:
   version "3.0.0"
@@ -3551,6 +3556,20 @@ ox@0.6.9:
     "@scure/bip32" "^1.5.0"
     "@scure/bip39" "^1.4.0"
     abitype "^1.0.6"
+    eventemitter3 "5.0.1"
+
+ox@0.9.6:
+  version "0.9.6"
+  resolved "https://registry.yarnpkg.com/ox/-/ox-0.9.6.tgz#5cf02523b6db364c10ee7f293ff1e664e0e1eab7"
+  integrity sha512-8SuCbHPvv2eZLYXrNmC0EC12rdzXQLdhnOMlHDW2wiCPLxBrOOJwX5L5E61by+UjTPOryqQiRSnjIKCI+GykKg==
+  dependencies:
+    "@adraffy/ens-normalize" "^1.11.0"
+    "@noble/ciphers" "^1.3.0"
+    "@noble/curves" "1.9.1"
+    "@noble/hashes" "^1.8.0"
+    "@scure/bip32" "^1.7.0"
+    "@scure/bip39" "^1.6.0"
+    abitype "^1.0.9"
     eventemitter3 "5.0.1"
 
 ox@^0.9.6:
@@ -4129,10 +4148,10 @@ tapable@^2.3.0:
   resolved "https://registry.yarnpkg.com/tapable/-/tapable-2.3.2.tgz#86755feabad08d82a26b891db044808c6ad00f15"
   integrity sha512-1MOpMXuhGzGL5TTCZFItxCc0AARf1EZFQkGqMm7ERKj8+Hgr5oLvJOVFcC+lRmR8hCe2S3jC4T5D7Vg/d7/fhA==
 
-tfhe@0.11.1:
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/tfhe/-/tfhe-0.11.1.tgz#7821a6fb3b18cd3704a76579c8839547e362082f"
-  integrity sha512-D4YeL0DYz4IOV/X7YzKFexkjbJdOdGn2M7mfDNOQW1OxA+NO/Z61BJ6ULLTvdBEQ3N6P985lNO61Drgsjf0g/w==
+tfhe@1.5.3:
+  version "1.5.3"
+  resolved "https://registry.yarnpkg.com/tfhe/-/tfhe-1.5.3.tgz#1456840cba661643a17dca29dff6db090b0f18ec"
+  integrity sha512-Geyw5g1TeHFqNGWYiXZmmfRl1wFml3Jkmo9mHor3nPSIr6V6LJRLILceqKdvOW2ieqxB662gwmm2Qo4SUji2tA==
 
 thread-stream@^0.15.1:
   version "0.15.2"
@@ -4208,7 +4227,7 @@ tw-animate-css@^1.4.0:
   resolved "https://registry.yarnpkg.com/tw-animate-css/-/tw-animate-css-1.4.0.tgz#b4a06f68244cba39428aa47e65e6e4c0babc21ee"
   integrity sha512-7bziOlRqH0hJx80h/3mbicLW7o8qLsH5+RaLR2t+OHM3D0JlWGODQKQ4cxbK7WlvmUxpcj6Kgu6EKqjrGFe3QQ==
 
-tweetnacl@^1.0.3:
+tweetnacl@1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-1.0.3.tgz#ac0af71680458d8a6378d0d0d050ab1407d35596"
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==
@@ -4397,7 +4416,21 @@ viem@2.23.2:
     ox "0.6.7"
     ws "8.18.0"
 
-viem@>=2.29.0, viem@^2.1.1, viem@^2.27.2, viem@^2.31.7, viem@^2.38.6, viem@^2.40.0, viem@^2.47.0:
+viem@2.38.6:
+  version "2.38.6"
+  resolved "https://registry.yarnpkg.com/viem/-/viem-2.38.6.tgz#ab315bef8f872bce86f0f145e9b008b5e94f1904"
+  integrity sha512-aqO6P52LPXRjdnP6rl5Buab65sYa4cZ6Cpn+k4OLOzVJhGIK8onTVoKMFMT04YjDfyDICa/DZyV9HmvLDgcjkw==
+  dependencies:
+    "@noble/curves" "1.9.1"
+    "@noble/hashes" "1.8.0"
+    "@scure/bip32" "1.7.0"
+    "@scure/bip39" "1.6.0"
+    abitype "1.1.0"
+    isows "1.0.7"
+    ox "0.9.6"
+    ws "8.18.3"
+
+viem@>=2.29.0, viem@^2.1.1, viem@^2.27.2, viem@^2.31.7, viem@^2.40.0, viem@^2.47.0:
   version "2.47.17"
   resolved "https://registry.yarnpkg.com/viem/-/viem-2.47.17.tgz#253e759b00b2e6acc1b69d90b191f18056f40163"
   integrity sha512-yNUKw6b1nd1i96GcJPqp096w5VVjUky/6PLT8UeUsEArzhD9YRrC0QJ50o8YEF7xA6M0FK8e6u5tAMyBLLl7tw==
@@ -4567,12 +4600,17 @@ zod@3.22.4:
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.22.4.tgz#f31c3a9386f61b1f228af56faa9255e845cf3fff"
   integrity sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==
 
+zod@4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-4.0.0.tgz#f331b035a9b39178cfb14e71b37c82701393db5d"
+  integrity sha512-9diLdTPc/L7w/5jI4C3gHYNiGHDV9IZYxo1e5LSD8cabi65WVTWWb+g2BGPEpUUCOxR4D+6O5B0AzyMdUAXwrw==
+
 zod@^3.24.1, zod@^3.25.76:
   version "3.25.76"
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.25.76.tgz#26841c3f6fd22a6a2760e7ccb719179768471e34"
   integrity sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==
 
-zod@^4.0.0, zod@^4.1.5:
+zod@^4.1.5:
   version "4.3.6"
   resolved "https://registry.yarnpkg.com/zod/-/zod-4.3.6.tgz#89c56e0aa7d2b05107d894412227087885ab112a"
   integrity sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==
@@ -4581,6 +4619,11 @@ zustand@5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/zustand/-/zustand-5.0.0.tgz#71f8aaecf185592a3ba2743d7516607361899da9"
   integrity sha512-LE+VcmbartOPM+auOjCCLQOsQ05zUTp8RkgwRzefUk+2jISdMMFnxvyTjA4YNWr5ZGXYbVsEMZosttuxUBkojQ==
+
+zustand@5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/zustand/-/zustand-5.0.1.tgz#2bdca5e4be172539558ce3974fe783174a48fdcf"
+  integrity sha512-pRET7Lao2z+n5R/HduXMio35TncTlSW68WsYBq2Lg1ASspsNGjpwLAsij3RpouyV6+kHMwwwzP0bZPD70/Jx/w==
 
 zustand@5.0.3:
   version "5.0.3"
